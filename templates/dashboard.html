@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Bienvenido, {{ username }}</h1>
+    <ul>
+        <li><a href="{{ url_for('asignaturas') }}">Asignaturas</a></li>
+        <li><a href="{{ url_for('docentes') }}">Docentes</a></li>
+        <li><a href="{{ url_for('generar_horario') }}">Generar Horario</a></li>
+    </ul>
+    <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+</body>
+</html>
