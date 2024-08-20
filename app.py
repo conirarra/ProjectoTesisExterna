@@ -15,16 +15,12 @@ def login():
         if username in users and check_password_hash(users[username], password):
             session['username'] = username
             flash('Inicio de sesión exitoso', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('asignaturas'))  # Redirige a asignaturas
         else:
             flash('Nombre de usuario o contraseña incorrectos', 'danger')
             return redirect(url_for('login'))
     
     return render_template('login.html')
-
-@app.route('/dashboard')
-def dashboard():
-    return render_template('dashboard.html', username=session['username'])
 
 @app.route('/asignaturas')
 def asignaturas():
