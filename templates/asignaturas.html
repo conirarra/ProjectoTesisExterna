@@ -5,27 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asignaturas</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        html, body {
+            height: 100%;
             margin: 0;
-            padding: 0;
-            display: flex;
-            height: 100vh;
         }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            position: relative; /* Permite que los elementos hijos con position: absolute se posicionen relativos a body */
+        }
+
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 20%; /* Tamaño fijo del 20% */
-            height: 100vh;
+            width: 20%;
+            height: 100%;
             background-color: #f4f4f4;
             padding: 20px;
             box-sizing: border-box;
             border-right: 1px solid #ddd;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Centra el contenido en el medio del sidebar */
+            overflow-y: auto; /* Agrega scroll si el contenido es largo */
+            z-index: 1; /* Asegura que el sidebar esté por debajo del footer */
         }
 
         .sidebar h1 {
@@ -37,7 +41,6 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            width: 100%; /* Para asegurar que los enlaces ocupen todo el ancho disponible */
         }
 
         .sidebar ul li {
@@ -75,13 +78,30 @@
             background-color: #ddd;
             color: #000;
         }
+
         .content {
             margin-left: 20%;
             padding: 20px;
-            width: 80%;
             box-sizing: border-box;
-            height: 100%;
-            overflow-y: auto;
+            flex: 1; /* Ocupa el espacio restante */
+            overflow-y: auto; /* Agrega scroll si el contenido es largo */
+        }
+
+        footer {
+            position: absolute; /* Permite que el footer se posicione por encima del sidebar */
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: auto; /* Altura automática */
+            z-index: 2; /* Asegura que el footer esté por encima del sidebar */
+        }
+
+        footer img {
+            width: 100%;
+            height: auto;
+            display: block;
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
@@ -96,7 +116,12 @@
         <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
     </div>
     <div class="content">
-        <!-- Aquí va el contenido específico para asignaturas -->
+        <h2>Contenido de Asignaturas</h2>
+        <p>Aquí va el contenido principal de la página.</p>
     </div>
+    <footer>
+        <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
+             alt="Pie de página UNAB">
+    </footer>
 </body>
 </html>
