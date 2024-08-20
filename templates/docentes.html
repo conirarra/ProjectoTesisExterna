@@ -14,29 +14,37 @@
             flex-direction: column;
         }
         .sidebar {
-            width: 20%;
-            background-color: #f4f4f4;
-            height: 100%;
             position: fixed;
             top: 0;
             left: 0;
+            width: 20%; /* Tamaño fijo del 20% */
+            height: 100vh;
+            background-color: #f4f4f4;
+            padding: 20px;
+            box-sizing: border-box;
+            border-right: 1px solid #ddd;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            align-items: center; /* Centra el contenido en el medio del sidebar */
         }
+
         .sidebar h1 {
             font-size: 1.2em;
             margin-top: 0;
         }
+
         .sidebar ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            width: 100%; /* Para asegurar que los enlaces ocupen todo el ancho disponible */
         }
+
         .sidebar ul li {
             margin: 10px 0;
         }
+
         .sidebar ul li a {
             text-decoration: none;
             color: #333;
@@ -46,8 +54,27 @@
             border-radius: 4px;
             transition: background-color 0.3s;
         }
+
         .sidebar ul li a:hover {
             background-color: #ddd;
+        }
+
+        .sidebar .logout-btn {
+            margin-top: auto;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f4f4f4;
+            transition: background-color 0.3s, color 0.3s;
+            width: 100%; /* Asegura que el botón ocupe todo el ancho disponible */
+            text-align: center;
+        }
+
+        .sidebar .logout-btn:hover {
+            background-color: #ddd;
+            color: #000;
         }
         .content {
             margin-left: 20%;
@@ -134,7 +161,7 @@
 </head>
 <body>
     <div class="sidebar">
-        <h1>Menú</h1>
+        <h2>Menú</h2>
         <ul>
             <li><a href="{{ url_for('asignaturas') }}">Asignaturas</a></li>
             <li><a href="{{ url_for('docentes') }}">Docentes</a></li>
