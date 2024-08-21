@@ -6,15 +6,15 @@ users = {
     'user2': generate_password_hash('password2')
 }
 
-# Diccionario de asignaturas
-asignaturas = {
-    'Introducción a las Matemáticas': {'créditos': 5, 'departamento': 'Matemáticas'},
-    'Cálculo Diferencial': {'créditos': 5, 'departamento': 'Matemáticas'},
-    'Cálculo Integral': {'créditos': 5, 'departamento': 'Matemáticas'},
-    'Sistemas y Ecuaciones Diferenciales': {'créditos': 5, 'departamento': 'Matemáticas'},
-    'Cálculo Avanzado I': {'créditos': 5, 'departamento': 'Matemáticas'},
-    'Cálculo Avanzado II': {'créditos': 5, 'departamento': 'Matemáticas'}
-}
+# Lista de asignaturas
+asignaturas = [
+    'Introducción a las Matemáticas',
+    'Cálculo Diferencial',
+    'Cálculo Integral',
+    'Sistemas y Ecuaciones Diferenciales',
+    'Cálculo Avanzado I',
+    'Cálculo Avanzado II'
+]
 
 # Diccionario de docentes con asignaturas y disponibilidad por día
 docente = {
@@ -75,11 +75,13 @@ secciones = {}
 
 # Función para agregar una sección
 def agregar_seccion(profe, asignatura, dia, hora):
-    if docente not in docente:
+    # Verificar si el docente está en la lista de docentes
+    if profe not in docente:
         return "Docente no encontrado"
     
-    if asignatura not in docente[profe]['asignaturas']:
-        return "Asignatura no asignada a este docente"
+    # Verificar si la asignatura está en la lista de asignaturas
+    if asignatura not in asignaturas:
+        return "Asignatura no válida"
     
     if dia not in docente[profe]['disponibilidad']:
         return "Día no válido"
@@ -95,10 +97,10 @@ def agregar_seccion(profe, asignatura, dia, hora):
     if dia not in secciones:
         secciones[dia] = {}
     
-    if docente not in secciones[dia]:
-        secciones[dia][docente] = {'asignaturas': [], 'horarios': []}
+    if profe not in secciones[dia]:
+        secciones[dia][profe] = {'asignaturas': [], 'horarios': []}
     
-    secciones[dia][docente]['asignaturas'].append(asignatura)
-    secciones[dia][docente]['horarios'].append(hora)
+    secciones[dia][profe]['asignaturas'].append(asignatura)
+    secciones[dia][profe]['horarios'].append(hora)
     
     return "Sección agregada exitosamente"
