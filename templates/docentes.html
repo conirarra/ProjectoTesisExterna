@@ -3,47 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Cabin' rel='stylesheet'>
     <title>Docentes</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        html, body {
+            height: 100%;
             margin: 0;
-            padding: 0;
-            min-height: 100vh; /* Asegura que la altura mínima sea 100vh para permitir el scroll si es necesario */
+        }
+        body {
+            font-family: 'Cabin', sans-serif;
             display: flex;
             flex-direction: column;
+            margin: 0;
         }
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 20%; /* Tamaño fijo del 20% */
+            width: 20%;
             height: 100vh;
             background-color: #f4f4f4;
             padding: 20px;
             box-sizing: border-box;
             border-right: 1px solid #ddd;
             box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            z-index: 1;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centra el contenido en el medio del sidebar */
-        }
+            align-items: center;
+            color: #123A7A;
 
-        .sidebar h1 {
-            font-size: 1.2em;
+        }
+        .sidebar h2 {
+            font-size: 1.5em; 
             margin-top: 0;
         }
-
         .sidebar ul {
             list-style: none;
             padding: 0;
             margin: 0;
+            width: 100%; /* Asegura que la lista ocupe todo el ancho disponible */
         }
-
         .sidebar ul li {
             margin: 10px 0;
         }
-
         .sidebar ul li a {
             text-decoration: none;
             color: #333;
@@ -52,25 +56,23 @@
             padding: 10px;
             border-radius: 4px;
             transition: background-color 0.3s;
+            text-align: center; 
         }
-
         .sidebar ul li a:hover {
             background-color: #ddd;
         }
-
         .sidebar .logout-btn {
-            margin-top: auto;
             padding: 10px 15px;
             text-decoration: none;
-            color: #333;
-            border: 1px solid #ddd;
+            color: #f4f4f4;
+            border: 1px solid #12397a;
             border-radius: 5px;
-            background-color: #f4f4f4;
+            background-color: #12397a;
             transition: background-color 0.3s, color 0.3s;
-            width: 100%; /* Asegura que el botón ocupe todo el ancho disponible */
+            width: 80%; /* Asegura que el botón ocupe todo el ancho disponible */
             text-align: center;
+            display: block;
         }
-
         .sidebar .logout-btn:hover {
             background-color: #ddd;
             color: #000;
@@ -79,15 +81,25 @@
             margin-left: 20%;
             padding: 20px;
             box-sizing: border-box;
-            flex: 1; /* Permite que el contenido ocupe el espacio restante */
+            flex: 1;
             display: flex;
             flex-direction: column;
+            position: relative;
+            margin-bottom: 70px;
+        }
+        .content h2 {
+            margin-top: 4px;
+            margin-bottom: 35px;
+            font-size: 48px;
+            align-self: center;
+            color: #123A7A;
         }
         .container {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
-            margin-bottom: 70px; /* Espacio para los botones de paginación */
+            margin-bottom: 70px;
+            z-index: 2;
         }
         .docente {
             border: 1px solid #ddd;
@@ -97,12 +109,11 @@
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
             margin: 0 15px; /* Ajuste para márgenes laterales */
             height: 200px; /* Altura fija para mantener la forma */
-            overflow: auto; /* Permitir el desplazamiento interno si el contenido excede */
         }
         .docente h2 {
             margin: 0 0 8px;
             text-transform: uppercase;
-            font-size: 0.8em;
+            font-size: 16px;
         }
         .day-checkboxes {
             display: flex;
@@ -118,43 +129,55 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            font-size: 0.64em;
+            font-size: 0.75em;
         }
         .checkbox-group label {
             display: flex;
             align-items: center;
         }
         .day strong {
-            font-size: 0.7em;
+            font-size: 0.8em;
         }
         .pagination {
-            position: fixed;
-            bottom: 0;
-            left: 20%;
-            width: 80%;
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: auto;
             background-color: #fff;
-            border-top: 1px solid #ddd;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 10px;
-            padding: 10px;
-            box-shadow: 0 -3px 6px rgba(0,0,0,0.1);
+            padding: 5px 15px 10px;
+            z-index: 2; 
         }
         .pagination button, .pagination span {
             padding: 5px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: #f4f4f4;
+            border: 1px solid #fff;
+            border-radius: 6px;
+            background-color: #fff;
             cursor: pointer;
         }
         .pagination button:disabled {
-            background-color: #ddd;
             cursor: not-allowed;
         }
         .pagination .active {
-            background-color: #007bff;
-            color: #fff;
+            background-color: #2c2c2c;
+            color: #dcdcdc;
+        }
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+        }
+        footer img {
+            width: 100%;
+            height: auto;
+            display: block;
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
@@ -166,9 +189,10 @@
             <li><a href="{{ url_for('docentes') }}">Docentes</a></li>
             <li><a href="{{ url_for('generar_horario') }}">Generar Horario</a></li>
         </ul>
-        <a href="{{ url_for('logout') }}">Cerrar Sesión</a>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>
     </div>
     <div class="content">
+        <h2>Optimizador de Horarios Docentes</h2>
         <div class="container">
             {% for nombre_docente, info_docente in docente.items() %}
             <div class="docente">
@@ -194,12 +218,16 @@
             {% endfor %}
         </div>
         <div class="pagination">
-            <button onclick="window.location.href='{{ url_for('docentes', page=page-1) }}'" {% if page == 1 %}disabled{% endif %}>Anterior</button>
+            <button onclick="window.location.href='{{ url_for('docentes', page=page-1) }}'" {% if page == 1 %}disabled{% endif %}> 🡠 Anterior</button>
             {% for p in range(1, (total_docentes // per_page) + 2) %}
                 <span class="{% if p == page %}active{% endif %}" onclick="window.location.href='{{ url_for('docentes', page=p) }}'">{{ p }}</span>
             {% endfor %}
-            <button onclick="window.location.href='{{ url_for('docentes', page=page+1) }}'" {% if page * per_page >= total_docentes %}disabled{% endif %}>Siguiente</button>
+            <button onclick="window.location.href='{{ url_for('docentes', page=page+1) }}'" {% if page * per_page >= total_docentes %}disabled{% endif %}>Siguiente 🡢 </button>
         </div>
     </div>
+    <footer>
+        <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
+             alt="Pie de página UNAB">
+    </footer>
 </body>
 </html>
