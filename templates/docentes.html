@@ -33,7 +33,6 @@
             flex-direction: column;
             align-items: center;
             color: #123A7A;
-
         }
         .sidebar h2 {
             font-size: 1.5em; 
@@ -43,7 +42,7 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            width: 100%; /* Asegura que la lista ocupe todo el ancho disponible */
+            width: 100%;
         }
         .sidebar ul li {
             margin: 10px 0;
@@ -69,7 +68,7 @@
             border-radius: 5px;
             background-color: #12397a;
             transition: background-color 0.3s, color 0.3s;
-            width: 80%; /* Asegura que el botón ocupe todo el ancho disponible */
+            width: 80%;
             text-align: center;
             display: block;
         }
@@ -89,7 +88,7 @@
         }
         .content h2 {
             margin-top: 4px;
-            margin-bottom: 35px;
+            margin-bottom: 25px;
             font-size: 48px;
             align-self: center;
             color: #123A7A;
@@ -109,11 +108,34 @@
             box-shadow: 0 3px 6px rgba(0,0,0,0.1);
             margin: 0 15px; /* Ajuste para márgenes laterales */
             height: 200px; /* Altura fija para mantener la forma */
+            position: relative;
         }
         .docente h2 {
-            margin: 0 0 8px;
+            margin: 0;
             text-transform: uppercase;
             font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .docente-buttons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .docente-buttons button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #12397a;
+            color: #fff;
+            cursor: pointer;
+        }
+        .docente-buttons button:disabled {
+            background-color: #ddd;
+            color: #333;
+            cursor: not-allowed;
         }
         .day-checkboxes {
             display: flex;
@@ -129,7 +151,7 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
-            font-size: 0.75em;
+            font-size: 0.8em;
         }
         .checkbox-group label {
             display: flex;
@@ -196,24 +218,32 @@
         <div class="container">
             {% for nombre_docente, info_docente in docente.items() %}
             <div class="docente">
-                <h2>{{ nombre_docente }}</h2>
-                <div class="day-checkboxes">
-                    {% for dia, horas in info_docente.disponibilidad.items() %}
-                    <div class="day">
-                        <strong>{{ dia }}</strong>
-                        <div class="checkbox-group">
-                            {% for hora in ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] %}
-                                <label>
-                                    <input type="checkbox" 
-                                        name="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
-                                        {% if hora in horas %}checked{% endif %}>
-                                    {{ hora }}
-                                </label>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endfor %}
+                <div class="docente-buttons">
+                    <button type="button" class="edit-btn">Editar</button>
+                    <button type="submit" class="save-btn" disabled>Guardar</button>
                 </div>
+                <h2>{{ nombre_docente }}</h2>
+                <form action="{{ url_for('docentes') }}" method="POST">
+                    <div class="day-checkboxes">
+                        {% for dia, horas in info_docente.disponibilidad.items() %}
+                        <div class="day">
+                            <strong>{{ dia }}</strong>
+                            <div class="checkbox-group">
+                                {% for hora in ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] %}
+                                    <label>
+                                        <input type="checkbox" 
+                                            name="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
+                                            {% if hora in horas %}checked{% endif %}
+                                            disabled>
+                                        {{ hora }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="docente" value="{{ nombre_docente }}">
+                </form>
             </div>
             {% endfor %}
         </div>
@@ -222,12 +252,36 @@
             {% for p in range(1, (total_docentes // per_page) + 2) %}
                 <span class="{% if p == page %}active{% endif %}" onclick="window.location.href='{{ url_for('docentes', page=p) }}'">{{ p }}</span>
             {% endfor %}
-            <button onclick="window.location.href='{{ url_for('docentes', page=page+1) }}'" {% if page * per_page >= total_docentes %}disabled{% endif %}>Siguiente 🡢 </button>
+            <button onclick="window.location.href='{{ url_for('docentes', page=page+1) }}'" {% if page == (total_docentes // per_page) + 1 %}disabled{% endif %}>Siguiente 🡢</button>
         </div>
     </div>
     <footer>
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
+    <script>
+        document.querySelectorAll('.edit-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const container = btn.closest('.docente');
+                container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = false;
+                });
+                btn.style.display = 'none';
+                container.querySelector('.save-btn').disabled = false;
+                container.querySelector('.save-btn').style.display = 'inline-block';
+            });
+        });
+
+        document.querySelectorAll('.save-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const container = btn.closest('.docente');
+                container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.disabled = true;
+                });
+                btn.disabled = true;
+                container.querySelector('.edit-btn').style.display = 'inline-block';
+            });
+        });
+    </script>
 </body>
 </html>

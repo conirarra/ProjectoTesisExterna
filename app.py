@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from werkzeug.security import check_password_hash
-from database import users, docente
+from database import users, docente, asignaturas, secciones, agregar_seccion
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -26,8 +26,20 @@ def login():
 def asignaturas():
     return render_template('asignaturas.html')
 
-@app.route('/docentes')
+@app.route('/docentes', methods=['GET', 'POST'])
 def docentes():
+    if request.method == 'POST':
+        # Manejar la actualización de la disponibilidad
+        docente_name = request.form.get('docente')
+        if docente_name and docente_name in docente:
+            # Actualizar disponibilidad
+            for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']:
+                horas = request.form.getlist(f'{docente_name}_{dia}')
+                docente[docente_name]['disponibilidad'][dia] = horas
+
+            flash('Disponibilidad actualizada', 'success')
+            return redirect(url_for('docentes'))
+
     page = int(request.args.get('page', 1))  # Obtener el número de página, por defecto es 1
     per_page = 4  # Número de docentes por página
     total_docentes = len(docente)
