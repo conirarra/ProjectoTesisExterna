@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css?family=Cabin');
+
+html, body {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family: 'Cabin', sans-serif;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20%;
+    height: 100vh;
+    background-color: #f4f4f4;
+    padding: 20px;
+    box-sizing: border-box;
+    border-right: 1px solid #ddd;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    overflow-y: auto;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.sidebar h2 {
+    font-size: 1.5em; 
+    margin-top: 0;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.sidebar ul li {
+    margin: 10px 0;
+}
+
+.sidebar ul li a {
+    text-decoration: none;
+    color: #333;
+    font-size: 1em;
+    display: block;
+    padding: 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    text-align: center; 
+}
+
+.sidebar ul li a:hover {
+    background-color: #ddd;
+}
+
+.sidebar .logout-btn {
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #f4f4f4;
+    border: 1px solid #12397a;
+    border-radius: 5px;
+    background-color: #12397a;
+    transition: background-color 0.3s, color 0.3s;
+    width: 80%;
+    text-align: center;
+    display: block;
+}
+
+.sidebar .logout-btn:hover {
+    background-color: #ddd;
+    color: #000;
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    z-index: 2;
+}
+
+footer img {
+    width: 100%;
+    height: auto;
+    display: block;
+    padding: 0;
+    margin: 0;
+}

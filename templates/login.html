@@ -2,51 +2,42 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="stylesheet.css">
     <title>Iniciar Sesión</title>
     <style>
-        html, body {
-            height: 100%;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
         body {
-            margin: 0;
-            display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center; /* Alinea el contenido horizontalmente */
+            align-items: center;
         }
-
+    
         .content {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start; /* Ajusta la alineación vertical */
+            justify-content: flex-start;
             padding: 0 20px;
             box-sizing: border-box;
             margin-top: 10vh;
         }
-
+    
         .form-container {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-
+    
         .form-container img {
-            width: auto; /* Ajusta el tamaño de la imagen automáticamente */
-            height: 100px; /* Ajusta la altura de la imagen */
-            margin-bottom: 15px; /* Espacio entre la imagen y el título */
+            width: auto;
+            height: 100px;
+            margin-bottom: 15px;
             transform: scale(1.35);
         }
-
+    
         .form-container h1 {
             margin-bottom: 15px;
         }
-
+    
         .form-container label {
             margin-bottom: 5px;
             display: block;
@@ -54,39 +45,20 @@
             max-width: 300px;
             text-align: left;
         }
-
+    
         .form-container input {
-            width: 100%; /* Ocupa todo el ancho disponible */
-            max-width: 300px; /* Ancho máximo para los campos de entrada */
-            margin-bottom: 15px; /* Espacio entre los campos y el botón */
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 15px;
             padding: 8px;
             box-sizing: border-box;
         }
-
+    
         .form-container button {
-            width: 100%; /* Ocupa todo el ancho disponible */
-            max-width: 300px; /* Ancho máximo para el botón */
+            width: 100%;
+            max-width: 300px;
             padding: 10px;
-            margin-top: 10px; /* Espacio adicional debajo del campo de contraseña */
-        }
-
-        footer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: auto;
-            padding: 0;
-            margin: 0;
-            z-index: 2;
-        }
-
-        footer img {
-            width: 100%;
-            height: auto;
-            display: block;
-            padding: 0;
-            margin: 0;
+            margin-top: 10px;
         }
     </style>
 </head>
