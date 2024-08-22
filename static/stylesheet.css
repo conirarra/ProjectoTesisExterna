@@ -33,6 +33,7 @@ body {
 .sidebar h2 {
     font-size: 1.5em; 
     margin-top: 0;
+    color: #123A7A;
 }
 
 .sidebar ul {
@@ -48,13 +49,14 @@ body {
 
 .sidebar ul li a {
     text-decoration: none;
-    color: #333;
-    font-size: 1em;
+    color: #123A7A;
+    font-size: 1.3em;
     display: block;
     padding: 10px;
     border-radius: 4px;
     transition: background-color 0.3s;
-    text-align: center; 
+    text-align: left;
+    font-weight: semi-bold;
 }
 
 .sidebar ul li a:hover {
@@ -72,9 +74,31 @@ body {
     width: 80%;
     text-align: center;
     display: block;
+    margin-top: 100px;
 }
 
 .sidebar .logout-btn:hover {
     background-color: #ddd;
     color: #000;
+}
+
+.sidebar ul li a img.icon {
+    width: 20px;
+    height: auto;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.sidebar .logo {
+    width: 80%; /* Ajusta el ancho de la imagen */
+    height: auto; /* Mantén la proporción de la imagen */
+    display: block;
+    margin: 0 auto 20px; /* Centra la imagen y añade un margen inferior */
+    transform: scale(0.75);
+    margin-left: 30px;
+    margin-bottom: 10px;
+}
+
+.content h2 {
+    color: #123A7A;
 }

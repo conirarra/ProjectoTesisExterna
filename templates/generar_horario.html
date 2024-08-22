@@ -2,11 +2,55 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="stylesheet.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
     <title>Generar Horario</title>
+    <style>
+        body {
+            position: relative;
+        }
+        .content {
+            margin-left: 22%;
+            padding: 20px;
+            box-sizing: border-box;
+            flex: 1;
+            overflow-y: auto;
+        }
+        footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: auto; 
+            z-index: 2; 
+        }
+        footer img {
+            width: 100%;
+            height: auto;
+            display: block;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Generar Horario</h1>
-    <a href="{{ url_for('dashboard') }}">Volver al Dashboard</a>
+    <div class="sidebar">
+        <img src="{{ url_for('static', filename='logo-UNAB.png') }}" alt="Logo UNAB" class="logo">
+        <h2>Menú</h2>
+        <ul>
+            <li><a href="{{ url_for('asignaturas') }}"><img src="{{ url_for('static', filename='asignatura.png') }}" alt="Asignaturas Icon" class="icon"> Asignaturas</a></li>
+            <li><a href="{{ url_for('docentes') }}"><img src="{{ url_for('static', filename='docentes.png') }}" alt="Docentes Icon" class="icon"> Docentes</a></li>
+            <li><a href="{{ url_for('generar_horario') }}"><img src="{{ url_for('static', filename='generar-horario.png') }}" alt="Generar Horario Icon" class="icon"> Generar Horario</a></li>
+        </ul>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>
+    </div>
+    <div class="content">
+        <h2 style="text-align: center; font-size: 30px;">Optimizador de Horarios Docentes</h2>
+        <p>Aquí va el contenido principal de la página.</p>
+    </div>
+    <footer>
+        <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
+             alt="Pie de página UNAB">
+    </footer>
 </body>
 </html>

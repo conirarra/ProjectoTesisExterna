@@ -7,7 +7,7 @@
     <title>Docentes</title>
     <style>
         .content {
-            margin-left: 20%;
+            margin-left: 22%;
             padding: 20px;
             box-sizing: border-box;
             flex: 1;
@@ -143,16 +143,17 @@
 </head>
 <body>
     <div class="sidebar">
+        <img src="{{ url_for('static', filename='logo-UNAB.png') }}" alt="Logo UNAB" class="logo">
         <h2>Menú</h2>
         <ul>
-            <li><a href="{{ url_for('asignaturas') }}">Asignaturas</a></li>
-            <li><a href="{{ url_for('docentes') }}">Docentes</a></li>
-            <li><a href="{{ url_for('generar_horario') }}">Generar Horario</a></li>
+            <li><a href="{{ url_for('asignaturas') }}"><img src="{{ url_for('static', filename='asignatura.png') }}" alt="Asignaturas Icon" class="icon"> Asignaturas</a></li>
+            <li><a href="{{ url_for('docentes') }}"><img src="{{ url_for('static', filename='docentes.png') }}" alt="Docentes Icon" class="icon"> Docentes</a></li>
+            <li><a href="{{ url_for('generar_horario') }}"><img src="{{ url_for('static', filename='generar-horario.png') }}" alt="Generar Horario Icon" class="icon"> Generar Horario</a></li>
         </ul>
         <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>
     </div>
     <div class="content">
-        <h2>Optimizador de Horarios Docentes</h2>
+        <h2 style="text-align: center; font-size: 30px;">Optimizador de Horarios Docentes</h2>
         <div class="container">
             {% for nombre_docente, info_docente in docente.items() %}
             <div class="docente">
