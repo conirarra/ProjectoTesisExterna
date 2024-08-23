@@ -7,7 +7,7 @@ users = {
 }
 
 # Lista de asignaturas
-asignaturas = [
+ramos = [
     'Introducción a las Matemáticas',
     'Cálculo Diferencial',
     'Cálculo Integral',
@@ -72,35 +72,3 @@ docente = {
 
 # Diccionario vacío para secciones
 secciones = {}
-
-# Función para agregar una sección
-def agregar_seccion(profe, asignatura, dia, hora):
-    # Verificar si el docente está en la lista de docentes
-    if profe not in docente:
-        return "Docente no encontrado"
-    
-    # Verificar si la asignatura está en la lista de asignaturas
-    if asignatura not in asignaturas:
-        return "Asignatura no válida"
-    
-    if dia not in docente[profe]['disponibilidad']:
-        return "Día no válido"
-    
-    if hora not in docente[profe]['disponibilidad'][dia]:
-        return "Hora no disponible para el día"
-    
-    # Verificar que la sección no esté ya asignada en el horario especificado
-    for seccion in secciones.get(dia, {}).values():
-        if hora in seccion['horarios']:
-            return "Horario ya ocupado"
-    
-    if dia not in secciones:
-        secciones[dia] = {}
-    
-    if profe not in secciones[dia]:
-        secciones[dia][profe] = {'asignaturas': [], 'horarios': []}
-    
-    secciones[dia][profe]['asignaturas'].append(asignatura)
-    secciones[dia][profe]['horarios'].append(hora)
-    
-    return "Sección agregada exitosamente"

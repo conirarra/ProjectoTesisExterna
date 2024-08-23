@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from werkzeug.security import check_password_hash
-from database import users, docente, asignaturas, secciones, agregar_seccion
+from database import users, docente, ramos, secciones
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -24,7 +24,7 @@ def login():
 
 @app.route('/asignaturas')
 def asignaturas():
-    return render_template('asignaturas.html')
+    return render_template('asignaturas.html', asignaturas=ramos, docente=docente)
 
 @app.route('/docentes', methods=['GET', 'POST'])
 def docentes():
