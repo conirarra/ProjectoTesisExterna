@@ -148,3 +148,19 @@ body {
 #availabilityModal .modal-footer {
     margin-top: 20px; /* Espacio adicional antes del botón */
 }
+
+.selected {
+    background-color: #e0e0e0d5;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.seccionesContainer {
+    display: flex;
+    flex-direction: column-reverse; /* Invertir el orden de los elementos */
+}
+
+.seccion {
+    margin-left: 15px;
+}
