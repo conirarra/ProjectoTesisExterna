@@ -1,106 +1,110 @@
-from werkzeug.security import generate_password_hash
+import mysql.connector as mariadb
 
-# Diccionario de usuarios predefinidos con contraseñas encriptadas
-users = {
-    'user1': generate_password_hash('password1'),
-    'user2': generate_password_hash('password2')
-}
+try:
+    connection = mariadb.connect(host='localhost', port='3306',
+                                   user='root', database='depmatematicas')
 
-# Lista de asignaturas
-asignaturas = [
-    'Introducción a las Matemáticas',
-    'Cálculo Diferencial',
-    'Cálculo Integral',
-    'Sistemas y Ecuaciones Diferenciales',
-    'Cálculo Avanzado I',
-    'Cálculo Avanzado II'
-]
+    if connection:
+        cursor = connection.cursor()
+    
+        cursor.execute("SELECT `Nombre de Usuario`, `Contraseña` FROM users")
+        users = {usuario: contraseña for usuario, contraseña in cursor}
 
-# Diccionario de docentes con asignaturas y disponibilidad por día
-docente = {
-    'Juan Pérez': {
-        'asignaturas': ['Cálculo Diferencial', 'Cálculo Integral', 'Cálculo Avanzado I'],
-        'disponibilidad': {
-            'Lunes': ['1-2', '3-4', '5-6'],
-            'Martes': ['1-2', '3-4', '11-12'],
-            'Miércoles': ['5-6', '7-8', '11-12'],
-            'Jueves': ['1-2', '9-10'],
-            'Viernes': ['3-4', '7-8', '11-12']
-        }
-    },
-    'Ana Gómez': {
-        'asignaturas': ['Introducción a las Matemáticas', 'Sistemas y Ecuaciones Diferenciales', 'Cálculo Avanzado II'],
-        'disponibilidad': {
-            'Lunes': ['1-2', '3-4', '11-12'],
-            'Martes': ['5-6', '7-8'],
-            'Miércoles': ['1-2', '9-10', '11-12'],
-            'Jueves': ['3-4', '5-6'],
-            'Viernes': ['1-2', '3-4', '11-12']
-        }
-    },
-    'Carlos Fernández': {
-        'asignaturas': ['Cálculo Diferencial', 'Cálculo Integral', 'Sistemas y Ecuaciones Diferenciales'],
-        'disponibilidad': {
-            'Lunes': ['1-2', '3-4', '5-6', '11-12'],
-            'Martes': ['3-4', '5-6', '7-8'],
-            'Miércoles': ['1-2', '7-8', '9-10'],
-            'Jueves': ['1-2', '3-4', '7-8', '11-12'],
-            'Viernes': ['5-6', '7-8', '9-10', '11-12']
-        }
-    },
-    'María López': {
-        'asignaturas': ['Introducción a las Matemáticas', 'Cálculo Avanzado I', 'Cálculo Avanzado II'],
-        'disponibilidad': {
-            'Lunes': ['1-2', '3-4', '7-8'],
-            'Martes': ['1-2', '3-4'],
-            'Miércoles': ['5-6', '9-10', '11-12'],
-            'Jueves': ['3-4', '7-8', '9-10'],
-            'Viernes': ['1-2', '5-6', '7-8', '11-12']
-        }
-    },
-    'María Fernández': {
-        'asignaturas': ['Cálculo Avanzado I', 'Cálculo Integral', 'Sistemas y Ecuaciones Diferenciales'],
-        'disponibilidad': {
-            'Lunes': ['1-2', '3-4', '5-6', '11-12'],
-            'Martes': ['1-2', '3-4', '7-8','11-12'],
-            'Miércoles': ['5-6', '9-10'],
-            'Jueves': ['3-4', '7-8', '9-10'],
-            'Viernes': ['1-2', '5-6']
-        }
-    }
-}
+        cursor.execute("SELECT `Nombre`, `Asignaturas` FROM docentes")
+        docente = {}
+        for nombre, asignaturas in cursor:
+            docente[nombre] = {
+                "asignaturas": asignaturas,
+                "disponibilidad": {
+                    "Lunes": [],
+                    "Martes": [],
+                    "Miércoles": [],
+                    "Jueves": [],
+                    "Viernes": []
+                }
+            }
 
-# Diccionario vacío para secciones
-secciones = {}
+        cursor.execute("SELECT `Docente`, `Dia`, `Hora`, `Disponible` FROM disponibilidad")
+        for docente_nombre, dia, hora, disponible in cursor:
+            if disponible and docente_nombre in docente:
+                docente[docente_nombre]["disponibilidad"].setdefault(dia, []).append(hora)
 
-# Función para agregar una sección
-def agregar_seccion(profe, asignatura, dia, hora):
-    # Verificar si el docente está en la lista de docentes
-    if profe not in docente:
-        return "Docente no encontrado"
+except mariadb.Error as e:
+    print(f"Error al conectar a MariaDB: {e}")
+
+finally:
+    cursor.close()
+    connection.close()
+
     
-    # Verificar si la asignatura está en la lista de asignaturas
-    if asignatura not in asignaturas:
-        return "Asignatura no válida"
-    
-    if dia not in docente[profe]['disponibilidad']:
-        return "Día no válido"
-    
-    if hora not in docente[profe]['disponibilidad'][dia]:
-        return "Hora no disponible para el día"
-    
-    # Verificar que la sección no esté ya asignada en el horario especificado
-    for seccion in secciones.get(dia, {}).values():
-        if hora in seccion['horarios']:
-            return "Horario ya ocupado"
-    
-    if dia not in secciones:
-        secciones[dia] = {}
-    
-    if profe not in secciones[dia]:
-        secciones[dia][profe] = {'asignaturas': [], 'horarios': []}
-    
-    secciones[dia][profe]['asignaturas'].append(asignatura)
-    secciones[dia][profe]['horarios'].append(hora)
-    
-    return "Sección agregada exitosamente"
+def actualizar_disponibilidad(docente_nombre, dia, hora, nueva_disponibilidad):
+    try:
+        # Establecer la conexión a la base de datos
+        connection = mariadb.connect(host='localhost', port=3306,
+                                     user='root', database='depmatematicas')
+        cursor = connection.cursor()
+
+        # Capitalizar el nombre del día
+        dia = dia.capitalize()
+
+        # Insertar o actualizar disponibilidad
+        if nueva_disponibilidad:
+            cursor.execute("""
+                INSERT INTO disponibilidad (Docente, Dia, Hora, Disponible)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE Disponible = VALUES(Disponible)
+            """, (docente_nombre, dia, hora, True))
+        else:
+            cursor.execute("""
+                DELETE FROM disponibilidad
+                WHERE Docente = %s AND Dia = %s AND Hora = %s
+            """, (docente_nombre, dia, hora))
+
+        # Confirmar los cambios
+        connection.commit()
+
+        # Actualizar el diccionario docente en memoria
+        if docente_nombre in docente:
+            if nueva_disponibilidad:
+                if hora not in docente[docente_nombre]["disponibilidad"][dia]:
+                    docente[docente_nombre]["disponibilidad"][dia].append(hora)
+            else:
+                if hora in docente[docente_nombre]["disponibilidad"][dia]:
+                    docente[docente_nombre]["disponibilidad"][dia].remove(hora)
+
+    except mariadb.Error as e:
+        print(f"Error al conectar a MariaDB: {e}")
+
+    finally:
+        cursor.close()
+        connection.close()
+
+def insert_seccion(asignatura, seccion, horario, docente):
+    try:
+        connection = mariadb.connect(host='localhost', port='3306',
+                                   user='root', database='depmatematicas')
+        cursor = connection.cursor()
+
+        query = """
+        INSERT INTO secciones (Asignatura, Seccion, Horario, Docente)
+        VALUES (%s, %s, %s, %s)
+        """
+        values = (asignatura, seccion, horario, docente)
+
+        cursor.execute(query, values)
+        connection.commit()
+    finally:
+        cursor.close()
+        connection.close()
+import pandas as pd
+
+df_docentes = pd.read_csv('data/docentes.csv')
+df_disponible = pd.read_csv('data/disponibilidad.csv')
+df_usuarios = pd.read_csv('data/users.csv')
+
+lista_docentes = df_docentes.values.tolist()
+lista_disponible = df_disponible.values.tolist()
+lista_usuarios = df_usuarios.values.tolist()
+
+
+

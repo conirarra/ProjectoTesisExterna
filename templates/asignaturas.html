@@ -14,7 +14,108 @@
             padding: 20px;
             box-sizing: border-box;
             flex: 1;
-            overflow-y: auto;
+            gap: 20px;
+        }
+        h2 {
+            text-align: center;
+            font-size: 30px;
+            color: #123A7A;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 20px;
+            width: auto;
+            justify-items: center;
+        }
+        .ramo {
+            width: 350px;
+            height: 200px;
+            box-sizing: border-box;
+            border: 1px solid #929292;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .ramo h2 {
+            margin-top: 8px;
+            font-size: 20px;
+        }
+        .btn-add-section {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .btn-add-section:hover {
+            background-color: #0056b3;
+        }
+        .btn-next, .btn-cls {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 20px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 16px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-body {
+            margin-bottom: 20px; /* Espacio entre la lista de docentes y el botón siguiente */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 50%; /* Ajusta el ancho del modal */
+            max-width: 600px;
+            position: relative;
+            height: 300px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-header {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .modal-footer {
+            margin-top: 20px;
+            text-align: right;
         }
         footer {
             position: absolute;
@@ -45,12 +146,125 @@
         <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>
     </div>
     <div class="content">
-        <h2 style="text-align: center; font-size: 30px;">Optimizador de Horarios Docentes</h2>
-        <p>Aquí va el contenido principal de la página.</p>
+        <h2 style="text-align: center; font-size: 30px; margin-bottom: 40px;">Optimizador de Horarios Docentes</h2>
+        <div class="container">
+            {% for asignatura in asignaturas %}
+            <div class="ramo">
+                <h2>{{ asignatura }}</h2>
+                <button class="btn-add-section" onclick="openAddSectionModal('{{ asignatura }}')">Agregar Sección</button>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     <footer>
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
+
+    <!-- Modal de Selección de Docente -->
+    <div id="selectDocenteModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSelectDocenteModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Docentes</h2>
+            </div>
+            <div class="modal-body">
+                <form id="docenteForm">
+                    <ul id="docenteList">
+                        <!-- Lista de docentes se llenará con JavaScript -->
+                    </ul>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-next" onclick="openAvailabilityModal()">Siguiente</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Disponibilidad del Docente -->
+    <div id="availabilityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Editar Disponibilidad</h2>
+            </div>
+            <div class="modal-body" id="editContent">
+                <!-- Contenido del modal de edición se añadirá aquí -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save" onclick="saveEdit()">Guardar Cambios</button>
+            </div>
+            <div class="modal-body" id="availabilityContent">
+                <!-- Disponibilidad del docente seleccionado se mostrará aquí -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cls" onclick="closeAvailabilityModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const docentes = {{ docente | tojson }}; // Pasar el diccionario docente a JavaScript
+        let currentAsignatura = '';
+
+        function openAddSectionModal(asignatura) {
+            currentAsignatura = asignatura;
+            const docenteList = document.getElementById('docenteList');
+            docenteList.innerHTML = '';
+
+            // Llenar la lista de docentes
+            for (const [docenteNombre, info] of Object.entries(docentes)) {
+                if (info.asignaturas.includes(asignatura)) {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `<input type="radio" name="docente" value="${docenteNombre}"> ${docenteNombre}`;
+                    docenteList.appendChild(listItem);
+                }
+            }
+
+            document.getElementById('selectDocenteModal').style.display = "block";
+        }
+
+        function closeSelectDocenteModal() {
+            document.getElementById('selectDocenteModal').style.display = "none";
+        }
+
+        function openAvailabilityModal() {
+            const selectedDocente = document.querySelector('input[name="docente"]:checked');
+            if (!selectedDocente) {
+                alert('Por favor, seleccione un docente.');
+                return;
+            }
+
+            const docenteNombre = selectedDocente.value;
+            document.getElementById('selectedDocente').innerText = docenteNombre;
+
+            const disponibilidad = docentes[docenteNombre]?.disponibilidad || {};
+
+            const availabilityContent = document.getElementById('availabilityContent');
+            
+            for (const [dia, horas] of Object.entries(disponibilidad)) {
+                availabilityContent.innerHTML += `<li><strong>${dia}:</strong> ${horas.join(', ')}</li>`;
+            }
+            
+            availabilityContent.innerHTML += '</ul>';
+
+            document.getElementById('selectDocenteModal').style.display = "none";
+            document.getElementById('availabilityModal').style.display = "block";
+        }
+
+        function closeAvailabilityModal() {
+            document.getElementById('availabilityModal').style.display = "none";
+        }
+
+        // Cerrar el modal si se hace clic fuera de él
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('selectDocenteModal')) {
+                closeSelectDocenteModal();
+            }
+            if (event.target === document.getElementById('availabilityModal')) {
+                closeAvailabilityModal();
+            }
+        }
+    </script>
 </body>
 </html>
