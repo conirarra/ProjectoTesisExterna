@@ -1,6 +1,15 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash
 from werkzeug.security import check_password_hash
-from database import users, docente, ramos, secciones
+from database import users, docente
+
+ramos = [
+    'Introducción a las Matemáticas',
+    'Cálculo Diferencial',
+    'Cálculo Integral',
+    'Sistemas y Ecuaciones Diferenciales',
+    'Cálculo Avanzado I',
+    'Cálculo Avanzado II'
+]
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
