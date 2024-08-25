@@ -183,19 +183,34 @@
         </div>
     </div>
 
-    <div id="availabilityModal" class="modal">
+    <!-- Modal de Edición -->
+    <div id="editModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeAvailabilityModal()">&times;</span>
+            <span class="close" onclick="closeEditModal()">&times;</span>
             <div class="modal-header">
-                <h2>Disponibilidad de <span id="selectedDocente"></span></h2>
+                <h2>Editar Disponibilidad</h2>
             </div>
-            <div class="modal-body" id="availabilityContent">
-                <div id="availabilityColumns" style="display: flex; gap: 20px;">
-                    <!-- Las columnas de disponibilidad se añadirán aquí -->
-                </div>
+            <div class="modal-body" id="editContent">
+                <!-- Contenido del modal de edición se añadirá aquí -->
             </div>
             <div class="modal-footer">
-                <button class="btn-cls" onclick="saveSeccion()">Crear Sección</button>
+                <button class="btn-save" onclick="saveEdit()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Guardado -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSaveModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Confirmar Guardado</h2>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas guardar los cambios?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cls" onclick="confirmSave()">Guardar</button>
             </div>
         </div>
     </div>
@@ -203,8 +218,6 @@
     <script>
         const docentes = {{ docente | tojson }}; // Pasar el diccionario docente a JavaScript
         let currentAsignatura = '';
-        // Diccionario para guardar las secciones creadas
-        const secciones = {};
         let seccionCounter = 1; // Contador para el número de la sección
 
         function openAddSectionModal(asignatura) {
@@ -331,6 +344,10 @@
                 closeAvailabilityModal();
             })
             .catch(error => console.error('Error al guardar la sección:', error));
+        }
+
+        function closeAvailabilityModal() {
+            document.getElementById('availabilityModal').style.display = "none";
         }
     </script>
 </body>

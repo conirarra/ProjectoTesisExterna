@@ -1,16 +1,15 @@
-import mariadb
+import mysql.connector as mariadb
 
 try:
-    connection = mariadb.connect(host='localhost', user='root', password='password', database='depmatematicas')
+    connection = mariadb.connect(host='localhost', port='3306',
+                                   user='root', database='depmatematicas')
 
     if connection:
         cursor = connection.cursor()
     
-        # Cargar datos de la tabla users
         cursor.execute("SELECT `Nombre de Usuario`, `Contraseña` FROM users")
         users = {usuario: contraseña for usuario, contraseña in cursor}
 
-        # Cargar datos de la tabla docentes
         cursor.execute("SELECT `Nombre`, `Asignaturas` FROM docentes")
         docente = {}
         for nombre, asignaturas in cursor:
@@ -25,58 +24,65 @@ try:
                 }
             }
 
-        # Cargar datos de la tabla disponibilidad
-        cursor.execute("SELECT `Docente`, `Dia`, `Hora`, `Disponibilidad` FROM disponibilidad")
+        cursor.execute("SELECT `Docente`, `Dia`, `Hora`, `Disponible` FROM disponibilidad")
         for docente_nombre, dia, hora, disponible in cursor:
             if disponible and docente_nombre in docente:
-                docente[docente_nombre]["disponibilidad"][dia].append(hora)
+                docente[docente_nombre]["disponibilidad"].setdefault(dia, []).append(hora)
 
 except mariadb.Error as e:
     print(f"Error al conectar a MariaDB: {e}")
 
 finally:
-    if connection:
-        cursor.close()
-        connection.close()
-        print("Conexión cerrada.")
+    cursor.close()
+    connection.close()
 
+    
 def actualizar_disponibilidad(docente_nombre, dia, hora, nueva_disponibilidad):
     try:
-        connection = mariadb.connect(host='localhost', user='root', password='password', database='depmatematicas')
+        # Establecer la conexión a la base de datos
+        connection = mariadb.connect(host='localhost', port=3306,
+                                     user='root', database='depmatematicas')
         cursor = connection.cursor()
 
-        cursor.execute("""
-            UPDATE disponibilidad
-            SET Disponibilidad = ?
-            WHERE Docente = ? AND Dia = ? AND Hora = ?
-        """, (nueva_disponibilidad, docente_nombre, dia, hora))
-
-        # Confirmar los cambios en la base de datos
-        connection.commit()
-
-        # Capitalizar el día para asegurarse de que coincide con las llaves del diccionario
+        # Capitalizar el nombre del día
         dia = dia.capitalize()
 
-        # Actualizar el diccionario docente
+        # Insertar o actualizar disponibilidad
+        if nueva_disponibilidad:
+            cursor.execute("""
+                INSERT INTO disponibilidad (Docente, Dia, Hora, Disponible)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE Disponible = VALUES(Disponible)
+            """, (docente_nombre, dia, hora, True))
+        else:
+            cursor.execute("""
+                DELETE FROM disponibilidad
+                WHERE Docente = %s AND Dia = %s AND Hora = %s
+            """, (docente_nombre, dia, hora))
+
+        # Confirmar los cambios
+        connection.commit()
+
+        # Actualizar el diccionario docente en memoria
         if docente_nombre in docente:
-            if nueva_disponibilidad == False:
-                # Remover la hora de la lista de disponibilidad si se establece como False
-                if hora in docente[docente_nombre]["disponibilidad"][dia]:
-                    docente[docente_nombre]["disponibilidad"][dia].remove(hora)
-            else:
-                # Agregar la hora de la lista de disponibilidad si se establece como True
+            if nueva_disponibilidad:
                 if hora not in docente[docente_nombre]["disponibilidad"][dia]:
                     docente[docente_nombre]["disponibilidad"][dia].append(hora)
-                    
+            else:
+                if hora in docente[docente_nombre]["disponibilidad"][dia]:
+                    docente[docente_nombre]["disponibilidad"][dia].remove(hora)
+
     except mariadb.Error as e:
         print(f"Error al conectar a MariaDB: {e}")
 
     finally:
         cursor.close()
+        connection.close()
 
 def insert_seccion(asignatura, seccion, horario, docente):
     try:
-        connection = mariadb.connect(host='localhost', user='root', password='password', database='depmatematicas')
+        connection = mariadb.connect(host='localhost', port='3306',
+                                   user='root', database='depmatematicas')
         cursor = connection.cursor()
 
         query = """
@@ -89,3 +95,4 @@ def insert_seccion(asignatura, seccion, horario, docente):
         connection.commit()
     finally:
         cursor.close()
+        connection.close()

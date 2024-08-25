@@ -125,6 +125,23 @@
             background-color: #2c2c2c;
             color: #dcdcdc;
         }
+        
+        .upload-btn {
+            position: absolute;
+            bottom: auto;
+            right: 20px;
+            margin-top: 20px;
+            margin-right: 35px;
+            margin-bottom: 15px;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #12397a;
+            color: #fff;
+            cursor: pointer;
+            transform: scale(1.3);
+        }
+
         footer {
             position: fixed;
             bottom: 0;
@@ -154,6 +171,7 @@
     </div>
     <div class="content">
         <h2 style="text-align: center; font-size: 30px;">Optimizador de Horarios Docentes</h2>
+        <button class="upload-btn">Subir Cambios</button>
         <div class="container">
             {% for nombre_docente, info_docente in docente.items() %}
             <div class="docente">
@@ -162,7 +180,7 @@
                     <button type="submit" class="save-btn" disabled>Guardar</button>
                 </div>
                 <h2>{{ nombre_docente }}</h2>
-                <form action="{{ url_for('docentes') }}" method="POST">
+                <form action="{{ url_for('update_disponibilidad') }}" method="POST">
                     <div class="day-checkboxes">
                         {% for dia, horas in info_docente.disponibilidad.items() %}
                         <div class="day">
@@ -171,7 +189,9 @@
                                 {% for hora in ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] %}
                                     <label>
                                         <input type="checkbox" 
+                                            id="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
                                             name="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
+                                            value="{{ hora }}"
                                             {% if hora in horas %}checked{% endif %}
                                             disabled>
                                         {{ hora }}
@@ -202,23 +222,47 @@
         document.querySelectorAll('.edit-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const container = btn.closest('.docente');
-                container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const saveBtn = container.querySelector('.save-btn');
+    
+                // Habilitar los checkboxes y mostrar el botón "Guardar"
+                checkboxes.forEach(checkbox => {
                     checkbox.disabled = false;
                 });
-                btn.style.display = 'none';
-                container.querySelector('.save-btn').disabled = false;
-                container.querySelector('.save-btn').style.display = 'inline-block';
+                btn.style.display = 'none'; // Ocultar el botón "Editar"
+                saveBtn.disabled = false; // Habilitar el botón "Guardar"
             });
         });
 
         document.querySelectorAll('.save-btn').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const container = btn.closest('.docente');
-                container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const form = container.querySelector('form');
+                const formData = new FormData(form);
+                
+                // Deshabilitar los checkboxes y el botón "Guardar"
+                checkboxes.forEach(checkbox => {
                     checkbox.disabled = true;
                 });
-                btn.disabled = true;
-                container.querySelector('.edit-btn').style.display = 'inline-block';
+                btn.disabled = true; // Deshabilitar el botón "Guardar"
+                container.querySelector('.edit-btn').style.display = 'inline-block'; // Mostrar el botón "Editar"
+            });
+        });
+
+        document.querySelector('.upload-btn').addEventListener('click', () => {
+            document.querySelectorAll('.docente form').forEach((form) => {
+                const formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data); // Verifica la respuesta del servidor
+                }).catch(error => {
+                    console.error('Error al subir cambios:', error);
+                });
             });
         });
     </script>

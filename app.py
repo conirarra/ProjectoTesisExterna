@@ -38,13 +38,18 @@ def asignaturas():
 @app.route('/docentes', methods=['GET', 'POST'])
 def docentes():
     if request.method == 'POST':
-        # Manejar la actualización de la disponibilidad
         docente_name = request.form.get('docente')
         if docente_name and docente_name in docente:
-            # Actualizar disponibilidad
             for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']:
                 horas = request.form.getlist(f'{docente_name}_{dia}')
-                docente[docente_name]['disponibilidad'][dia] = horas
+                # Actualizar disponibilidad en la base de datos
+                for hora in horas:
+                    actualizar_disponibilidad(docente_name, dia, hora, True)
+                # Remover las horas que ya no están disponibles
+                horas_actuales = docente[docente_name]['disponibilidad'][dia]
+                for hora in horas_actuales:
+                    if hora not in horas:
+                        actualizar_disponibilidad(docente_name, dia, hora, False)
 
             flash('Disponibilidad actualizada', 'success')
             return redirect(url_for('docentes'))
@@ -53,15 +58,12 @@ def docentes():
     per_page = 4  # Número de docentes por página
     total_docentes = len(docente)
 
-    # Calcula el inicio y fin de los índices
     start = (page - 1) * per_page
     end = start + per_page
 
-    # Divide los docentes en páginas
     docentes_items = list(docente.items())
     docentes_paginados = dict(docentes_items[start:end])
 
-    # Determina si hay más docentes para mostrar en páginas siguientes
     has_next = end < total_docentes
     has_prev = page > 1
 
@@ -74,7 +76,6 @@ def docentes():
         has_next=has_next,
         has_prev=has_prev
     )
-
 @app.route('/generar-horario')
 def generar_horario(): 
     return render_template('generar_horario.html')
@@ -96,7 +97,27 @@ def add_seccion():
     # Insertar sección en la base de datos
     insert_seccion(asignatura, seccion, horario, docente)
 
-    return jsonify({'status': 'success'}), 200
+    return jsonify({
+        'status': 'success',
+        'message': f'Sección {seccion} creada para la asignatura {asignatura} con horario {horario} para el docente {docente}.'
+    })
 
+@app.route('/update_disponibilidad', methods=['POST'])
+def update_disponibilidad():
+    # Lógica para actualizar disponibilidad
+    # Aquí recibes la información del formulario y la procesas
+    try:
+        docente_nombre = request.form.get('docente')
+        for key, value in request.form.items():
+            if key.startswith(docente_nombre):
+                dia, hora = key.split('_')[1], key.split('_')[2]
+                nueva_disponibilidad = request.form.get(key) == 'on'
+                actualizar_disponibilidad(docente_nombre, dia, hora, nueva_disponibilidad)
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        print(f"Error al actualizar disponibilidad: {e}")
+        return jsonify({'status': 'error', 'message': str(e)})
+    
+    
 if __name__ == '__main__':
     app.run(debug=True)
