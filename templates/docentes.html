@@ -217,53 +217,5 @@
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
-    <script>
-        document.querySelectorAll('.edit-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const container = btn.closest('.docente');
-                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-                const saveBtn = container.querySelector('.save-btn');
-    
-                // Habilitar los checkboxes y mostrar el botón "Guardar"
-                checkboxes.forEach(checkbox => {
-                    checkbox.disabled = false;
-                });
-                btn.style.display = 'none'; // Ocultar el botón "Editar"
-                saveBtn.disabled = false; // Habilitar el botón "Guardar"
-            });
-        });
-
-        document.querySelectorAll('.save-btn').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const container = btn.closest('.docente');
-                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-                const form = container.querySelector('form');
-                const formData = new FormData(form);
-                
-                // Deshabilitar los checkboxes y el botón "Guardar"
-                checkboxes.forEach(checkbox => {
-                    checkbox.disabled = true;
-                });
-                btn.disabled = true; // Deshabilitar el botón "Guardar"
-                container.querySelector('.edit-btn').style.display = 'inline-block'; // Mostrar el botón "Editar"
-            });
-        });
-
-        document.querySelector('.upload-btn').addEventListener('click', () => {
-            document.querySelectorAll('.docente form').forEach((form) => {
-                const formData = new FormData(form);
-                
-                fetch(form.action, {
-                    method: 'POST',
-                    body: formData
-                }).then(response => response.json())
-                .then(data => {
-                    console.log('Respuesta del servidor:', data); // Verifica la respuesta del servidor
-                }).catch(error => {
-                    console.error('Error al subir cambios:', error);
-                });
-            });
-        });
-    </script>
 </body>
 </html>

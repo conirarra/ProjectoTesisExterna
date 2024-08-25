@@ -85,39 +85,6 @@ def logout():
     session.pop('username', None)
     flash('Has cerrado sesión exitosamente', 'info')
     return redirect(url_for('login'))
-
-@app.route('/add_seccion', methods=['POST'])
-def add_seccion():
-    data = request.json
-    asignatura = data['asignatura']
-    seccion = data['seccion']
-    horario = data['horario']
-    docente = data['docente']
-
-    # Insertar sección en la base de datos
-    insert_seccion(asignatura, seccion, horario, docente)
-
-    return jsonify({
-        'status': 'success',
-        'message': f'Sección {seccion} creada para la asignatura {asignatura} con horario {horario} para el docente {docente}.'
-    })
-
-@app.route('/update_disponibilidad', methods=['POST'])
-def update_disponibilidad():
-    # Lógica para actualizar disponibilidad
-    # Aquí recibes la información del formulario y la procesas
-    try:
-        docente_nombre = request.form.get('docente')
-        for key, value in request.form.items():
-            if key.startswith(docente_nombre):
-                dia, hora = key.split('_')[1], key.split('_')[2]
-                nueva_disponibilidad = request.form.get(key) == 'on'
-                actualizar_disponibilidad(docente_nombre, dia, hora, nueva_disponibilidad)
-        return jsonify({'status': 'success'})
-    except Exception as e:
-        print(f"Error al actualizar disponibilidad: {e}")
-        return jsonify({'status': 'error', 'message': str(e)})
-    
     
 if __name__ == '__main__':
     app.run(debug=True)
