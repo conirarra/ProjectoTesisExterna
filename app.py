@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from werkzeug.security import check_password_hash
-from database import users, docente, insert_seccion, actualizar_disponibilidad
+from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 
 ramos = [
     'Introducción a las Matemáticas',
@@ -13,6 +14,7 @@ ramos = [
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+csrf = CSRFProtect(app)
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -21,7 +23,7 @@ def login():
         password = request.form['password']
         
         # Verificar si el usuario existe y la contraseña es correcta
-        if username in users and check_password_hash(users[username], password):
+        if username in lista_usuarios and check_password_hash(lista_usuarios[username], password):
             session['username'] = username
             flash('Inicio de sesión exitoso', 'success')
             return redirect(url_for('asignaturas'))  # Redirige a asignaturas
@@ -33,49 +35,43 @@ def login():
 
 @app.route('/asignaturas')
 def asignaturas():
-    return render_template('asignaturas.html', asignaturas=ramos, docente=docente)
+    return render_template('asignaturas.html', asignaturas=ramos)
 
 @app.route('/docentes', methods=['GET', 'POST'])
-def docentes():
-    if request.method == 'POST':
-        docente_name = request.form.get('docente')
-        if docente_name and docente_name in docente:
-            for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']:
-                horas = request.form.getlist(f'{docente_name}_{dia}')
-                # Actualizar disponibilidad en la base de datos
-                for hora in horas:
-                    actualizar_disponibilidad(docente_name, dia, hora, True)
-                # Remover las horas que ya no están disponibles
-                horas_actuales = docente[docente_name]['disponibilidad'][dia]
-                for hora in horas_actuales:
-                    if hora not in horas:
-                        actualizar_disponibilidad(docente_name, dia, hora, False)
-
-            flash('Disponibilidad actualizada', 'success')
-            return redirect(url_for('docentes'))
-
-    page = int(request.args.get('page', 1))  # Obtener el número de página, por defecto es 1
-    per_page = 4  # Número de docentes por página
-    total_docentes = len(docente)
-
+def mostrar_docentes():
+    page = request.args.get('page', 1, type=int)
+    per_page = 4
+    docentes = list(docente_disponibilidad.keys())
+    total_docentes = len(docentes)
     start = (page - 1) * per_page
     end = start + per_page
+    lista_docentes = docentes[start:end]
 
-    docentes_items = list(docente.items())
-    docentes_paginados = dict(docentes_items[start:end])
-
-    has_next = end < total_docentes
     has_prev = page > 1
+    has_next = end < total_docentes
 
-    return render_template(
-        'docentes.html', 
-        docente=docentes_paginados, 
-        page=page, 
-        total_docentes=total_docentes,
-        per_page=per_page,
-        has_next=has_next,
-        has_prev=has_prev
-    )
+    if request.method == 'POST':
+        docente = request.form.get('docente')
+        if docente in docente_disponibilidad:
+            for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']:
+                for bloque in ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']:
+                    key = f"{docente}_{dia}_{bloque}"
+                    if request.form.get(key):
+                        if bloque not in docente_disponibilidad[docente][dia]:
+                            docente_disponibilidad[docente][dia][bloque] = 'Si'
+                    else:
+                        if bloque in docente_disponibilidad[docente][dia]:
+                            docente_disponibilidad[docente][dia][bloque] = 'No'
+
+        flash('Cambios guardados con éxito', 'success')
+        return redirect(url_for('mostrar_docentes', page=page))
+
+    return render_template('docentes.html', lista_docentes=lista_docentes,
+                           disponibilidad=docente_disponibilidad, dias=['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
+                           bloques=['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'],
+                           page=page, total_docentes=total_docentes, per_page=per_page,
+                           has_prev=has_prev, has_next=has_next, docentes_dict=docentes_dict)
+
 @app.route('/generar-horario')
 def generar_horario(): 
     return render_template('generar_horario.html')
@@ -85,6 +81,34 @@ def logout():
     session.pop('username', None)
     flash('Has cerrado sesión exitosamente', 'info')
     return redirect(url_for('login'))
-    
+
+@app.route('/update_docentes', methods=['POST'])
+def update_docentes():
+    try:
+        docentes_data = request.get_json()
+        print(f'Datos recibidos: {docentes_data}')
+
+        if not docentes_data:
+            raise ValueError("No se recibieron datos")
+
+        original_dict = docente_disp_original
+        print(f'Estado original del diccionario: {original_dict}')
+
+        for docente, dias in docentes_data.items():
+            if docente in original_dict:
+                original_dict[docente].update(dias)
+            else:
+                original_dict[docente] = dias
+
+        print(f'Estado actualizado del diccionario: {original_dict}')
+
+        update_disponibilidad_csv(original_dict, original_dict)
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f'Error: {e}')
+        return jsonify({'success': False, 'error': str(e)}), 400
+
 if __name__ == '__main__':
     app.run(debug=True)

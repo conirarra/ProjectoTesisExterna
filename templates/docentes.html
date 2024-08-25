@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
     <title>Docentes</title>
@@ -164,35 +165,36 @@
         <h2>Menú</h2>
         <ul>
             <li><a href="{{ url_for('asignaturas') }}"><img src="{{ url_for('static', filename='asignatura.png') }}" alt="Asignaturas Icon" class="icon"> Asignaturas</a></li>
-            <li><a href="{{ url_for('docentes') }}"><img src="{{ url_for('static', filename='docentes.png') }}" alt="Docentes Icon" class="icon"> Docentes</a></li>
+            <li><a href="{{ url_for('mostrar_docentes') }}"><img src="{{ url_for('static', filename='docentes.png') }}" alt="Docentes Icon" class="icon"> Docentes</a></li>
             <li><a href="{{ url_for('generar_horario') }}"><img src="{{ url_for('static', filename='generar-horario.png') }}" alt="Generar Horario Icon" class="icon"> Generar Horario</a></li>
         </ul>
         <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>
     </div>
     <div class="content">
         <h2 style="text-align: center; font-size: 30px;">Optimizador de Horarios Docentes</h2>
-        <button class="upload-btn">Subir Cambios</button>
+        <button type="button" class="upload-btn" onclick="uploadChanges()">Subir Cambios</button>
         <div class="container">
-            {% for nombre_docente, info_docente in docente.items() %}
+            {% for nombre_docente in lista_docentes %}
             <div class="docente">
                 <div class="docente-buttons">
-                    <button type="button" class="edit-btn">Editar</button>
-                    <button type="submit" class="save-btn" disabled>Guardar</button>
+                    <button type="button" class="edit-btn" onclick="toggleEdit('{{ nombre_docente }}')">Editar</button>
+                    <button type="button" class="save-btn" id="save-{{ nombre_docente }}" disabled onclick="saveChanges('{{ nombre_docente }}')">Guardar</button>
                 </div>
                 <h2>{{ nombre_docente }}</h2>
-                <form action="{{ url_for('update_disponibilidad') }}" method="POST">
+                <form action="{{ url_for('update_docentes') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="day-checkboxes">
-                        {% for dia, horas in info_docente.disponibilidad.items() %}
+                        {% for dia in dias %}
                         <div class="day">
                             <strong>{{ dia }}</strong>
                             <div class="checkbox-group">
-                                {% for hora in ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] %}
+                                {% for hora in bloques %}
                                     <label>
-                                        <input type="checkbox" 
-                                            id="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
-                                            name="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
+                                        <input type="checkbox"
+                                            id="{{ nombre_docente }}_{{ dia }}_{{ hora }}"
+                                            name="{{ nombre_docente }}_{{ dia }}_{{ hora }}"
                                             value="{{ hora }}"
-                                            {% if hora in horas %}checked{% endif %}
+                                            {% if disponibilidad[nombre_docente][dia][hora] == 'Si' %}checked{% endif %}
                                             disabled>
                                         {{ hora }}
                                     </label>
@@ -205,17 +207,100 @@
                 </form>
             </div>
             {% endfor %}
-        <div class="pagination">
-            <button onclick="window.location.href='{{ url_for('docentes', page=page-1) }}'" {% if page == 1 %}disabled{% endif %}> 🡠 Anterior</button>
-            {% for p in range(1, (total_docentes // per_page) + 2) %}
-                <span class="{% if p == page %}active{% endif %}" onclick="window.location.href='{{ url_for('docentes', page=p) }}'">{{ p }}</span>
-            {% endfor %}
-            <button onclick="window.location.href='{{ url_for('docentes', page=page+1) }}'" {% if page == (total_docentes // per_page) + 1 %}disabled{% endif %}>Siguiente 🡢</button>
+            <div class="pagination">
+                <button onclick="window.location.href='{{ url_for('mostrar_docentes', page=page-1) }}'" {% if not has_prev %}disabled{% endif %}> 🡠 Anterior</button>
+                {% for p in range(1, (total_docentes // per_page) + 2) %}
+                    <span class="{% if p == page %}active{% endif %}" onclick="window.location.href='{{ url_for('mostrar_docentes', page=p) }}'">{{ p }}</span>
+                {% endfor %}
+                <button onclick="window.location.href='{{ url_for('mostrar_docentes', page=page+1) }}'" {% if not has_next %}disabled{% endif %}>Siguiente 🡢</button>
+            </div>
         </div>
     </div>
     <footer>
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
+    <script>
+        function toggleEdit(docente) {
+            console.log('Toggle edit for:', docente);
+            
+            // Obtén todos los checkboxes y botones correspondientes al docente
+            const checkboxes = document.querySelectorAll(`input[id^="${docente}_"]`);
+            const saveButton = document.getElementById(`save-${docente}`);
+            
+            if (!saveButton) {
+                console.error('Save button not found for:', docente);
+                return;
+            }
+
+            // Alternar el estado de los checkboxes y el botón de guardar
+            checkboxes.forEach(checkbox => {
+                checkbox.disabled = !checkbox.disabled; // Activa o desactiva los checkboxes
+            });
+            
+            saveButton.disabled = !saveButton.disabled; // Activa o desactiva el botón de guardar
+        }
+
+        function saveChanges(docente) {
+            console.log('Saving changes for:', docente);
+            
+            // Obtén todos los checkboxes y el botón Guardar correspondientes al docente
+            const checkboxes = document.querySelectorAll(`input[id^="${docente}_"]`);
+            const saveButton = document.getElementById(`save-${docente}`);
+            
+            if (!saveButton) {
+                console.error('Save button not found for:', docente);
+                return;
+            }
+            
+            // Deshabilitar los checkboxes
+            checkboxes.forEach(checkbox => {
+                checkbox.disabled = true;
+            });
+            
+            // Deshabilitar el botón Guardar
+            saveButton.disabled = true;
+        }
+    
+        function uploadChanges() {
+            let docentesData = {};
+            document.querySelectorAll('.docente').forEach(docenteDiv => {
+                let docenteName = docenteDiv.querySelector('h2').textContent;
+                let checkboxes = docenteDiv.querySelectorAll('input[type=checkbox]');
+                let disponibilidad = {};
+
+                checkboxes.forEach(checkbox => {
+                    let idParts = checkbox.id.split('_');
+                    let dia = idParts[1];
+                    let hora = idParts[2];
+                    if (!disponibilidad[dia]) {
+                        disponibilidad[dia] = {};
+                    }
+                    disponibilidad[dia][hora] = checkbox.checked ? 'Si' : 'No';
+                });
+
+                docentesData[docenteName] = disponibilidad;
+            });
+
+            // Obtener el token CSRF del meta tag
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch('/update_docentes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken  // Incluir el token CSRF en los encabezados
+                },
+                body: JSON.stringify(docentesData)
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Cambios subidos exitosamente.');
+                } else {
+                    alert('Error al subir los cambios.');
+                }
+            });
+        }
+    </script>
 </body>
 </html>

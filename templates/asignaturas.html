@@ -147,13 +147,36 @@
     <div class="content">
         <h2 style="text-align: center; font-size: 30px; margin-bottom: 40px;">Optimizador de Horarios Docentes</h2>
         <div class="container">
-            {% for asignatura in asignaturas %}
-            <div class="ramo">
-                <h2 style="margin-bottom: 0;">{{ asignatura }}</h2>
-                <div class="seccionesContainer" data-asignatura="{{ asignatura }}">
-                    <!-- Las secciones se añadirán dinámicamente aquí -->
+            {% for docente in lista_docentes %}
+            <div class="docente">
+                <div class="docente-buttons">
+                    <button type="button" class="edit-btn">Editar</button>
+                    <button type="submit" class="save-btn" disabled>Guardar</button>
                 </div>
-                <button class="btn-add-section" onclick="openAddSectionModal('{{ asignatura }}')">Agregar Sección</button>
+                <h2>{{ docente[0] }}</h2>
+                <form action="{{ url_for('update_disponibilidad') }}" method="POST">
+                    <div class="day-checkboxes">
+                        {% for dia, horas in docente_disponibilidad[docente[0]].items() %}
+                        <div class="day">
+                            <strong>{{ dia }}</strong>
+                            <div class="checkbox-group">
+                                {% for hora in ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] %}
+                                    <label>
+                                        <input type="checkbox" 
+                                            id="{{ docente[0] }}_{{ dia }}_{{ hora }}" 
+                                            name="{{ docente[0] }}_{{ dia }}_{{ hora }}" 
+                                            value="{{ hora }}"
+                                            {% if horas[hora] == "Si" %}checked{% endif %}
+                                            disabled>
+                                        {{ hora }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="docente" value="{{ docente[0] }}">
+                </form>
             </div>
             {% endfor %}
         </div>
