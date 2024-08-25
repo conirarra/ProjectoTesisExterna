@@ -180,6 +180,29 @@
                     <button type="submit" class="save-btn" disabled>Guardar</button>
                 </div>
                 <h2>{{ nombre_docente }}</h2>
+                <form action="{{ url_for('update_disponibilidad') }}" method="POST">
+                    <div class="day-checkboxes">
+                        {% for dia, horas in info_docente.disponibilidad.items() %}
+                        <div class="day">
+                            <strong>{{ dia }}</strong>
+                            <div class="checkbox-group">
+                                {% for hora in ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"] %}
+                                    <label>
+                                        <input type="checkbox" 
+                                            id="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
+                                            name="{{ nombre_docente }}_{{ dia }}_{{ hora }}" 
+                                            value="{{ hora }}"
+                                            {% if hora in horas %}checked{% endif %}
+                                            disabled>
+                                        {{ hora }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="docente" value="{{ nombre_docente }}">
+                </form>
             </div>
             {% endfor %}
         <div class="pagination">
@@ -194,8 +217,53 @@
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
- <script>
-    footer
- </script>
+    <script>
+        document.querySelectorAll('.edit-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const container = btn.closest('.docente');
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const saveBtn = container.querySelector('.save-btn');
+    
+                // Habilitar los checkboxes y mostrar el botón "Guardar"
+                checkboxes.forEach(checkbox => {
+                    checkbox.disabled = false;
+                });
+                btn.style.display = 'none'; // Ocultar el botón "Editar"
+                saveBtn.disabled = false; // Habilitar el botón "Guardar"
+            });
+        });
+
+        document.querySelectorAll('.save-btn').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const container = btn.closest('.docente');
+                const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                const form = container.querySelector('form');
+                const formData = new FormData(form);
+                
+                // Deshabilitar los checkboxes y el botón "Guardar"
+                checkboxes.forEach(checkbox => {
+                    checkbox.disabled = true;
+                });
+                btn.disabled = true; // Deshabilitar el botón "Guardar"
+                container.querySelector('.edit-btn').style.display = 'inline-block'; // Mostrar el botón "Editar"
+            });
+        });
+
+        document.querySelector('.upload-btn').addEventListener('click', () => {
+            document.querySelectorAll('.docente form').forEach((form) => {
+                const formData = new FormData(form);
+                
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta del servidor:', data); // Verifica la respuesta del servidor
+                }).catch(error => {
+                    console.error('Error al subir cambios:', error);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

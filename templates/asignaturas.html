@@ -39,7 +39,6 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
         }
         .ramo h2 {
             margin-top: 8px;
@@ -150,7 +149,10 @@
         <div class="container">
             {% for asignatura in asignaturas %}
             <div class="ramo">
-                <h2>{{ asignatura }}</h2>
+                <h2 style="margin-bottom: 0;">{{ asignatura }}</h2>
+                <div class="seccionesContainer" data-asignatura="{{ asignatura }}">
+                    <!-- Las secciones se añadirán dinámicamente aquí -->
+                </div>
                 <button class="btn-add-section" onclick="openAddSectionModal('{{ asignatura }}')">Agregar Sección</button>
             </div>
             {% endfor %}
@@ -181,8 +183,8 @@
         </div>
     </div>
 
-    <!-- Modal de Disponibilidad del Docente -->
-    <div id="availabilityModal" class="modal">
+    <!-- Modal de Edición -->
+    <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
             <div class="modal-header">
@@ -194,11 +196,21 @@
             <div class="modal-footer">
                 <button class="btn-save" onclick="saveEdit()">Guardar Cambios</button>
             </div>
-            <div class="modal-body" id="availabilityContent">
-                <!-- Disponibilidad del docente seleccionado se mostrará aquí -->
+        </div>
+    </div>
+
+    <!-- Modal de Guardado -->
+    <div id="saveModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSaveModal()">&times;</span>
+            <div class="modal-header">
+                <h2>Confirmar Guardado</h2>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas guardar los cambios?</p>
             </div>
             <div class="modal-footer">
-                <button class="btn-cls" onclick="closeAvailabilityModal()">Cerrar</button>
+                <button class="btn-cls" onclick="confirmSave()">Guardar</button>
             </div>
         </div>
     </div>
@@ -206,6 +218,7 @@
     <script>
         const docentes = {{ docente | tojson }}; // Pasar el diccionario docente a JavaScript
         let currentAsignatura = '';
+        let seccionCounter = 1; // Contador para el número de la sección
 
         function openAddSectionModal(asignatura) {
             currentAsignatura = asignatura;
@@ -239,31 +252,102 @@
             document.getElementById('selectedDocente').innerText = docenteNombre;
 
             const disponibilidad = docentes[docenteNombre]?.disponibilidad || {};
+            const availabilityColumns = document.getElementById('availabilityColumns');
+            availabilityColumns.innerHTML = '';  // Limpiar opciones previas
 
-            const availabilityContent = document.getElementById('availabilityContent');
-            
+            let column = document.createElement('ul');
+            column.style.listStyleType = 'none';
+            let count = 0;
+
             for (const [dia, horas] of Object.entries(disponibilidad)) {
-                availabilityContent.innerHTML += `<li><strong>${dia}:</strong> ${horas.join(', ')}</li>`;
-            }
-            
-            availabilityContent.innerHTML += '</ul>';
+                horas.forEach(hora => {
+                    if (count === 8) {
+                        // Crear una nueva columna si ya hay 8 elementos en la actual
+                        availabilityColumns.appendChild(column);
+                        column = document.createElement('ul');
+                        column.style.listStyleType = 'none';
+                        count = 0;
+                    }
 
+                    const li = document.createElement('li');
+                    li.textContent = `${dia}: ${hora}`;
+                    li.dataset.disponibilidad = `${dia}: ${hora}`;
+                    li.onclick = () => selectAvailability(li);
+
+                    column.appendChild(li);
+                    count++;
+                });
+            }
+
+            // Añadir la última columna si no está vacía
+            if (column.children.length > 0) {
+                availabilityColumns.appendChild(column);
+            }
+
+            // Mostrar el modal de disponibilidad
             document.getElementById('selectDocenteModal').style.display = "none";
             document.getElementById('availabilityModal').style.display = "block";
         }
 
-        function closeAvailabilityModal() {
-            document.getElementById('availabilityModal').style.display = "none";
+        function selectAvailability(element) {
+            // Remover selección previa
+            const selected = document.querySelector('.selected');
+            if (selected) {
+                selected.classList.remove('selected');
+            }
+
+            // Seleccionar el nuevo horario
+            element.classList.add('selected');
         }
 
-        // Cerrar el modal si se hace clic fuera de él
-        window.onclick = function(event) {
-            if (event.target === document.getElementById('selectDocenteModal')) {
-                closeSelectDocenteModal();
+        function saveSeccion() {
+            const selectedDocente = document.getElementById('selectedDocente').innerText;
+            const selectedAvailabilityElement = document.querySelector('.selected');
+
+            if (!selectedAvailabilityElement) {
+                alert('Por favor, selecciona un horario.');
+                return;
             }
-            if (event.target === document.getElementById('availabilityModal')) {
+
+            const selectedAvailability = selectedAvailabilityElement.dataset.disponibilidad;
+            const asignatura = currentAsignatura;
+            const seccion = seccionCounter; // Asignar el número de sección
+
+            // Insertar sección en la base de datos
+            fetch('/add_seccion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    asignatura: asignatura,
+                    seccion: seccion,
+                    horario: selectedAvailability,
+                    docente: selectedDocente
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Sección creada:', data);
+                // Mostrar la nueva sección en el contenedor correspondiente
+                const seccionesContainer = document.querySelector(`.seccionesContainer[data-asignatura="${asignatura}"]`);
+                const nuevaSeccion = document.createElement('div');
+                nuevaSeccion.className = 'seccion';
+                nuevaSeccion.innerHTML = `
+                    <p><strong>Sección ${seccion}:</strong> ${selectedDocente}, ${selectedAvailability}</p>
+                `;
+                seccionesContainer.appendChild(nuevaSeccion);
+
+                seccionCounter++; // Incrementar el contador de secciones
+
+                // Cerrar el modal de disponibilidad
                 closeAvailabilityModal();
-            }
+            })
+            .catch(error => console.error('Error al guardar la sección:', error));
+        }
+
+        function closeAvailabilityModal() {
+            document.getElementById('availabilityModal').style.display = "none";
         }
     </script>
 </body>
