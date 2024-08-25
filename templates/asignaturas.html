@@ -298,34 +298,39 @@
 
             const selectedAvailability = selectedAvailabilityElement.dataset.disponibilidad;
             const asignatura = currentAsignatura;
+            const seccion = seccionCounter; // Asignar el número de sección
 
-            // Guardar la información en el diccionario de secciones
-            secciones[seccionCounter] = {
-                seccion: seccionCounter,
-                asignatura: asignatura,
-                docente: selectedDocente,
-                disponibilidad: selectedAvailability
-            };
+            // Insertar sección en la base de datos
+            fetch('/add_seccion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    asignatura: asignatura,
+                    seccion: seccion,
+                    horario: selectedAvailability,
+                    docente: selectedDocente
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Sección creada:', data);
+                // Mostrar la nueva sección en el contenedor correspondiente
+                const seccionesContainer = document.querySelector(`.seccionesContainer[data-asignatura="${asignatura}"]`);
+                const nuevaSeccion = document.createElement('div');
+                nuevaSeccion.className = 'seccion';
+                nuevaSeccion.innerHTML = `
+                    <p><strong>Sección ${seccion}:</strong> ${selectedDocente}, ${selectedAvailability}</p>
+                `;
+                seccionesContainer.appendChild(nuevaSeccion);
 
-            console.log('Sección creada:', secciones[seccionCounter]);
+                seccionCounter++; // Incrementar el contador de secciones
 
-            // Mostrar la nueva sección en el contenedor correspondiente
-            const seccionesContainer = document.querySelector(`.seccionesContainer[data-asignatura="${asignatura}"]`);
-            const nuevaSeccion = document.createElement('div');
-            nuevaSeccion.className = 'seccion';
-            nuevaSeccion.innerHTML = `
-                <p><strong>Sección ${seccionCounter}:</strong> ${selectedDocente}, ${selectedAvailability}</p>
-            `;
-            seccionesContainer.appendChild(nuevaSeccion);
-
-            seccionCounter++; // Incrementar el contador de secciones
-
-            // Cerrar el modal de disponibilidad
-            closeAvailabilityModal();
-        }
-
-        function closeAvailabilityModal() {
-            document.getElementById('availabilityModal').style.display = "none";
+                // Cerrar el modal de disponibilidad
+                closeAvailabilityModal();
+            })
+            .catch(error => console.error('Error al guardar la sección:', error));
         }
     </script>
 </body>

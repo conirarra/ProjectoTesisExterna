@@ -1,6 +1,6 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash
+from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from werkzeug.security import check_password_hash
-from database import users, docente
+from database import users, docente, insert_seccion, actualizar_disponibilidad
 
 ramos = [
     'Introducción a las Matemáticas',
@@ -84,6 +84,19 @@ def logout():
     session.pop('username', None)
     flash('Has cerrado sesión exitosamente', 'info')
     return redirect(url_for('login'))
+
+@app.route('/add_seccion', methods=['POST'])
+def add_seccion():
+    data = request.json
+    asignatura = data['asignatura']
+    seccion = data['seccion']
+    horario = data['horario']
+    docente = data['docente']
+
+    # Insertar sección en la base de datos
+    insert_seccion(asignatura, seccion, horario, docente)
+
+    return jsonify({'status': 'success'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
