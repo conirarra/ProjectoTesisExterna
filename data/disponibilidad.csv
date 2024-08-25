@@ -1,0 +1,26 @@
+Nombre,Dia,Bloque,Disponible,Bloque,Disponible,Bloque,Disponible,Bloque,Disponible,Bloque,Disponible,Bloque,Disponible
+Juan Pérez,Lunes,1-2,Si,3-4,Si,5-6,Si,7-8,No,9-10,No,11-12,Si
+Juan Pérez,Martes,1-2,No,3-4,No,5-6,No,7-8,Si,9-10,Si,11-12,No
+Juan Pérez,Miércoles,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,No,11-12,No
+Juan Pérez,Jueves,1-2,No,3-4,No,5-6,No,7-8,Si,9-10,Si,11-12,No
+Juan Pérez,Viernes,1-2,Si,3-4,Si,5-6,Si,7-8,No,9-10,No,11-12,No
+Ana Gómez,Lunes,1-2,Si,3-4,Si,5-6,Si,7-8,Si,9-10,Si,11-12,No
+Ana Gómez,Martes,1-2,No,3-4,No,5-6,No,7-8,No,9-10,Si,11-12,No
+Ana Gómez,Miércoles,1-2,No,3-4,No,5-6,Si,7-8,Si,9-10,Si,11-12,No
+Ana Gómez,Jueves,1-2,No,3-4,No,5-6,No,7-8,No,9-10,Si,11-12,No
+Ana Gómez,Viernes,1-2,Si,3-4,Si,5-6,Si,7-8,Si,9-10,No,11-12,No
+Carlos Fernández,Lunes,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,Si,11-12,Si
+Carlos Fernández,Martes,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,Si,11-12,Si
+Carlos Fernández,Miércoles,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,Si,11-12,Si
+Carlos Fernández,Jueves,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,Si,11-12,Si
+Carlos Fernández,Viernes,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,Si,11-12,Si
+María López,Lunes,1-2,Si,3-4,No,5-6,Si,7-8,No,9-10,No,11-12,Si
+María López,Martes,1-2,Si,3-4,Si,5-6,No,7-8,No,9-10,Si,11-12,No
+María López,Miércoles,1-2,Si,3-4,No,5-6,Si,7-8,No,9-10,No,11-12,Si
+María López,Jueves,1-2,Si,3-4,Si,5-6,Si,7-8,No,9-10,Si,11-12,Si
+María López,Viernes,1-2,Si,3-4,No,5-6,No,7-8,No,9-10,Si,11-12,No
+María Fernández,Lunes,1-2,No,3-4,Si,5-6,Si,7-8,Si,9-10,Si,11-12,No
+María Fernández,Martes,1-2,No,3-4,Si,5-6,No,7-8,Si,9-10,Si,11-12,No
+María Fernández,Miércoles,1-2,No,3-4,Si,5-6,No,7-8,Si,9-10,Si,11-12,No
+María Fernández,Jueves,1-2,No,3-4,Si,5-6,Si,7-8,Si,9-10,No,11-12,No
+María Fernández,Viernes,1-2,No,3-4,Si,5-6,Si,7-8,Si,9-10,No,11-12,No
