@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
     <title>Asignaturas</title>
@@ -59,7 +60,7 @@
         .btn-add-section:hover {
             background-color: #0056b3;
         }
-        .btn-next, .btn-cls {
+        .btn-next, .btn-cls, .saveButton {
             background-color: #007bff;
             color: white;
             border: none;
@@ -96,26 +97,49 @@
             position: relative;
             height: 300px;
         }
+        .modal-content h2 {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
         .close {
             color: #aaa;
             float: right;
             font-size: 28px;
             font-weight: bold;
         }
-
         .close:hover,
         .close:focus {
             color: black;
             text-decoration: none;
             cursor: pointer;
         }
-        .modal-header {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
         .modal-footer {
             margin-top: 20px;
             text-align: right;
+        }
+        .availability-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); /* 5 columnas */
+            gap: 10px; /* Espacio entre columnas */
+            padding: 10px;
+        }
+        .availability-day {
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background-color: #f4f4f4;
+        }
+        .availability-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .availability-blocks label {
+            display: flex;
+            align-items: center;
+        }
+        .availability-blocks input[type="checkbox"] {
+            margin-right: 5px;
         }
         footer {
             position: absolute;
@@ -179,11 +203,12 @@
         <div class="modal-content">
             <span class="close" onclick="closeSelectDocenteModal()">&times;</span>
             <h2>Selecciona Docente</h2>
+            <input type="hidden" id="ramoSeleccionado" value="">
             <ul id="docenteList">
                 <!-- Lista de docentes se cargará aquí -->
             </ul>
             <div class="modal-footer">
-                <button class="btn-next" onclick="openAvailabilityModal()">Siguiente</button>
+                <button class="btn-next" onclick="selectDocente()">Siguiente</button>
             </div>
         </div>
     </div>
@@ -193,11 +218,11 @@
         <div class="modal-content">
             <span class="close" onclick="closeAvailabilityModal()">&times;</span>
             <h2>Disponibilidad de <span id="docenteSeleccionado"></span></h2>
-            <ul id="availabilityList">
-                <!-- Lista de disponibilidad se cargará aquí -->
-            </ul>
+            <div id="availabilityContainer" class="availability-container">
+                <!-- Aquí se cargarán los checkboxes -->
+            </div>
             <div class="modal-footer">
-                <button class="btn-next" onclick="saveAvailability()">Guardar Cambios</button>
+                <button class="saveButton" onclick="guardarDatos()">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -232,7 +257,14 @@
     function closeSelectDocenteModal() {
         document.getElementById('selectDocenteModal').style.display = 'none';
     }
+
+    function selectDocente() {
+        const selectedDocente = document.querySelector('input[name="docente"]:checked').value;
+        openAvailabilityModal(selectedDocente);
+    }
+
     function openAvailabilityModal(docente) {
+        closeSelectDocenteModal();
         // Mostrar el modal
         document.getElementById('availabilityModal').style.display = 'block';
         
@@ -243,19 +275,38 @@
         fetch('/get_disponibilidad/' + encodeURIComponent(docente))
             .then(response => response.json())
             .then(data => {
-                if (data.error) {
-                console.error(data.error);
-                } else {
-                    const availabilityList = document.getElementById('availabilityList');
-                    availabilityList.innerHTML = ''; // Limpiar la lista
-                    
-                    // Asumiendo que `data` es un objeto con la disponibilidad del docente
-                    for (const [dia, bloques] of Object.entries(data)) {
-                        const dayItem = document.createElement('li');
-                        dayItem.innerHTML = `<strong>${dia}</strong>:<br>${Object.entries(bloques).map(([bloque, estado]) => `${bloque}: ${estado}`).join('<br>')}`;
-                        availabilityList.appendChild(dayItem);
+                const availabilityContainer = document.getElementById('availabilityContainer');
+                availabilityContainer.innerHTML = ''; // Limpiar el contenedor
+
+                // Definir los días de la semana
+                const daysOfWeek = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'];
+                
+                // Crear columnas para los días
+                daysOfWeek.forEach(day => {
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'availability-day';
+                    dayDiv.innerText = day;
+
+                    const blocksDiv = document.createElement('div');
+                    blocksDiv.className = 'availability-blocks';
+
+                    // Obtener los bloques disponibles para el día
+                    const blocks = data[day] || {};
+                    for (const [block, available] of Object.entries(blocks)) {
+                        if (available === 'Si') {
+                            const label = document.createElement('label');
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.value = block;
+                            label.appendChild(checkbox);
+                            label.appendChild(document.createTextNode(block));
+                            blocksDiv.appendChild(label);
+                        }
                     }
-                }
+
+                    dayDiv.appendChild(blocksDiv);
+                    availabilityContainer.appendChild(dayDiv);
+                });
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -266,11 +317,58 @@
         document.getElementById('availabilityModal').style.display = 'none';
     }
 
-    function saveAvailability() {
-        // Implementar lógica para guardar los cambios en la disponibilidad
-        alert('Cambios guardados');
-        closeAvailabilityModal();
+    function guardarDatos() {
+        const docente = document.getElementById('docenteSeleccionado').textContent;
+        const ramo = document.getElementById('ramoSeleccionado').textContent;
+        
+        // Obtener bloques seleccionados
+        const selectedBlocks = [];
+        const checkboxes = document.querySelectorAll('#availabilityContainer input[type="checkbox"]:checked');
+        checkboxes.forEach(checkbox => {
+            selectedBlocks.push(checkbox.value);
+        });
+
+        // Crear datos para enviar
+        const data = {
+            docente: docente,
+            ramo: ramo,
+            bloques: selectedBlocks.join(',')  // Convierte la lista de bloques en una cadena separada por comas
+        };
+
+        let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        fetch('/guardar_datos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            // Verifica si la respuesta es correcta
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                closeAvailabilityModal();
+            } else {
+                console.error('Error:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
     }
+
+    // Asegúrate de añadir el event listener al botón "Guardar"
+    document.querySelector('.saveButton').addEventListener('click', guardarDatos);
+    $('#availabilityModal').modal('hide');
+    $('#selectionModal').modal('hide');
 </script>
 </body>
 </html>

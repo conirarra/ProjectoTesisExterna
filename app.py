@@ -3,14 +3,15 @@ from werkzeug.security import check_password_hash
 from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv, jsonify_disponibilidad
 from flask_wtf.csrf import CSRFProtect
 import csv
+from collections import defaultdict
 
 ramos = [
-    'Introducción a las Matemáticas',
-    'Cálculo Diferencial',
-    'Cálculo Integral',
+    'Introduccion a las Matematicas',
+    'Calculo Diferencial',
+    'Calculo Integral',
     'Sistemas y Ecuaciones Diferenciales',
-    'Cálculo Avanzado I',
-    'Cálculo Avanzado II'
+    'Calculo Avanzado I',
+    'Calculo Avanzado II'
 ]
 
 app = Flask(__name__)
@@ -55,7 +56,7 @@ def mostrar_docentes():
     if request.method == 'POST':
         docente = request.form.get('docente')
         if docente in docente_disponibilidad:
-            for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']:
+            for dia in ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes']:
                 for bloque in ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']:
                     key = f"{docente}_{dia}_{bloque}"
                     if request.form.get(key):
@@ -69,24 +70,10 @@ def mostrar_docentes():
         return redirect(url_for('mostrar_docentes', page=page))
 
     return render_template('docentes.html', lista_docentes=lista_docentes,
-                           disponibilidad=docente_disponibilidad, dias=['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'],
+                           disponibilidad=docente_disponibilidad, dias=['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'],
                            bloques=['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'],
                            page=page, total_docentes=total_docentes, per_page=per_page,
                            has_prev=has_prev, has_next=has_next, docentes_dict=docentes_dict)
-
-def manage_docentes():
-    if request.method == 'GET':
-        # Obtener la lista de docentes
-        docentes = list(docente_disponibilidad.keys())
-        return jsonify(docentes)
-    elif request.method == 'POST':
-        # Manejar la creación o modificación de secciones (esto es solo un ejemplo, ajusta según tus necesidades)
-        data = request.form
-        asignatura = data.get('asignatura')
-        docente = data.get('docente')
-        horario = data.get('horario')
-        # Aquí puedes agregar la lógica para manejar la creación de secciones
-        return 'Sección creada', 200
     
 @app.route('/get_disponibilidad/<docente>', methods=['GET'])
 def get_disponibilidad(docente):
@@ -145,6 +132,54 @@ def update_docentes():
     except Exception as e:
         print(f'Error: {e}')
         return jsonify({'success': False, 'error': str(e)}), 400
+    
+@app.route('/guardar_datos', methods=['POST'])
+def guardar_datos():
+    try:
+        data = request.json
+
+        docente = data.get('docente')
+        ramo = data.get('ramo')
+        bloques = data.get('bloques')
+
+        if not docente or not ramo or not bloques:
+            return jsonify({'error': 'Faltan datos necesarios'}), 400
+
+        # Guardar datos en secciones.csv
+        with open('data/secciones.csv', mode='a', newline='') as file:
+            writer = csv.writer(file)
+            bloques_list = bloques.split(',')  # Convierte la cadena de bloques en una lista
+            for bloque in bloques_list:
+                writer.writerow([docente, ramo, bloque])
+
+        # Leer el archivo disponibilidad.csv
+        disponibilidad_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
+        with open('data/disponibilidad.csv', mode='r', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            encabezado = next(reader)
+            for row in reader:
+                docente_nombre = row[0]
+                for i, dia in enumerate(['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes']):
+                    for j, bloque in enumerate(['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']):
+                        disponibilidad_dict[docente_nombre][dia][bloque] = row[1 + i * 6 + j]
+
+        # Actualizar disponibilidad
+        for bloque in bloques.split(','):
+            try:
+                dia, bloque_hora = bloque.split(' ')
+                if docente in disponibilidad_dict:
+                    if dia in disponibilidad_dict[docente]:
+                        disponibilidad_dict[docente][dia][bloque_hora] = 'No'
+            except ValueError as ve:
+                print(f"Error al procesar el bloque '{bloque}': {ve}")
+
+        # Guardar cambios en disponibilidad.csv
+        update_disponibilidad_csv({}, disponibilidad_dict, file_path='data/disponibilidad.csv')
+
+        return jsonify({'message': 'Datos guardados correctamente'}), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -18,17 +18,13 @@ def load_disponibilidad_csv(file_path='data/disponibilidad.csv'):
     for index, row in df_disponible.iterrows():
         nombre_docente = row['Nombre']
         
-        # Extraer los bloques y disponibilidad, comenzando desde la segunda columna
-        bloques_disponibles = row[1:].dropna().values
-        
-        for i in range(0, len(bloques_disponibles) - 1, 2):
-            dia = bloques_disponibles[i]
-            bloque = bloques_disponibles[i + 1]
-            disponible = bloques_disponibles[i + 2] if (i + 2) < len(bloques_disponibles) else 'No'
+        # Iterar sobre las columnas (que representan "día,bloque")
+        for col in df_disponible.columns[1:]:  # omitir la primera columna que es 'Nombre'
+            dia, bloque = col.split(',')
+            disponibilidad = row[col]  # 'Si' o 'No'
             
-            # Verifica que 'dia', 'bloque' y 'disponible' no sean NaN
-            if pd.notna(dia) and pd.notna(bloque):
-                docente_disponibilidad[nombre_docente][dia][bloque] = disponible
+            # Asignar la disponibilidad al docente en el diccionario
+            docente_disponibilidad[nombre_docente][dia][bloque] = disponibilidad
     
     return dict(docente_disponibilidad)
 
@@ -76,3 +72,5 @@ def jsonify_disponibilidad(docente_disponibilidad):
             disponibilidad_simple[dia] = [horario for horario, estado in horarios.items()]
         result[docente] = disponibilidad_simple
     return result
+
+print(docente_disponibilidad)
