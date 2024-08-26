@@ -44,7 +44,7 @@ def update_disponibilidad_csv(original_dict, updated_dict, file_path='data/dispo
     for docente, dias in updated_dict.items():
         if docente in original_dict:
             fila = [docente]
-            for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']:
+            for dia in ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes']:
                 for bloque in ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']:
                     # Obtener el estado actualizado
                     new_status = dias.get(dia, {}).get(bloque, 'No')
@@ -57,7 +57,7 @@ def update_disponibilidad_csv(original_dict, updated_dict, file_path='data/dispo
         writer = csv.writer(csvfile)
         
         # Escribir el encabezado
-        encabezado = ['Nombre'] + [f"{dia},{bloque}" for dia in ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'] for bloque in ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']]
+        encabezado = ['Nombre'] + [f"{dia},{bloque}" for dia in ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'] for bloque in ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']]
         writer.writerow(encabezado)
         
         # Escribir las filas actualizadas
@@ -72,5 +72,13 @@ def jsonify_disponibilidad(docente_disponibilidad):
             disponibilidad_simple[dia] = [horario for horario, estado in horarios.items()]
         result[docente] = disponibilidad_simple
     return result
+
+def leer_secciones_csv():
+    secciones = []
+    with open('data/secciones.csv', mode='r', encoding='utf-8') as archivo:
+        lector_csv = csv.DictReader(archivo)
+        for fila in lector_csv:
+            secciones.append(fila)
+    return secciones
 
 print(docente_disponibilidad)

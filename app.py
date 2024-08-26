@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from werkzeug.security import check_password_hash
-from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv, jsonify_disponibilidad
+from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv, jsonify_disponibilidad, leer_secciones_csv
 from flask_wtf.csrf import CSRFProtect
 import csv
 from collections import defaultdict
@@ -38,7 +38,12 @@ def login():
 @app.route('/asignaturas')
 def asignaturas():
     asignaturas = {ramo: [] for ramo in ramos}
-    return render_template('asignaturas.html', asignaturas=asignaturas)
+    secciones = leer_secciones_csv()
+    for seccion in secciones:
+        ramo = seccion['ramo']
+        if ramo in asignaturas:
+            asignaturas[ramo].append(seccion)
+    return render_template('asignaturas.html', asignaturas=asignaturas, secciones=secciones)
 
 @app.route('/docentes', methods=['GET', 'POST'])
 def mostrar_docentes():

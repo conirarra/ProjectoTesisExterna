@@ -44,6 +44,7 @@
         .ramo h2 {
             margin-top: 4px;
             font-size: 20px;
+            margin-bottom: 0;
         }
         .btn-add-section {
             position: absolute;
@@ -141,6 +142,12 @@
         .availability-blocks input[type="checkbox"] {
             margin-right: 5px;
         }
+        .section-list {
+            margin-top: 15px;
+        }
+        .section-list ul{
+            margin-top: 0;
+        }
         footer {
             position: absolute;
             bottom: 0;
@@ -176,17 +183,18 @@
             <div class="ramo">
                 <h2>{{ ramo }}</h2>
                 <button type="button" class="btn-add-section" onclick="openSelectDocenteModal('{{ ramo }}')">Agregar Sección</button>
-                <div class="section-list" style="margin-left: 4px;">
+                <div class="section-list">
                     {% if secciones %}
-                        {% for seccion in secciones %}
-                        <div class="section-item">
-                            <strong>ID:</strong> {{ seccion['id'] }}<br>
-                            <strong>Docente:</strong> {{ seccion['docente'] }}<br>
-                            <strong>Horario:</strong> {{ seccion['horario'] }}
-                        </div>
-                        {% endfor %}
+                        <ul>
+                            {% for seccion in secciones %}
+                            <li class="section-item">
+                                <strong>Docente:</strong> {{ seccion['docente'] }}<br>
+                                <strong>Bloque:</strong> {{ seccion['bloque'] }}
+                            </li>
+                            {% endfor %}
+                        </ul>
                     {% else %}
-                        <div class="section-item">No hay secciones disponibles.</div>
+                        <div class="section-item" style="margin-left: 20px;">No hay secciones disponibles.</div>
                     {% endif %}
                 </div>
             </div>

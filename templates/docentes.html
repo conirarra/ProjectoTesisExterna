@@ -175,37 +175,37 @@
         <button type="button" class="upload-btn" onclick="uploadChanges()">Subir Cambios</button>
         <div class="container">
             {% for nombre_docente in lista_docentes %}
-            <div class="docente">
-                <div class="docente-buttons">
-                    <button type="button" class="edit-btn" onclick="toggleEdit('{{ nombre_docente }}')">Editar</button>
-                    <button type="button" class="save-btn" id="save-{{ nombre_docente }}" disabled onclick="saveChanges('{{ nombre_docente }}')">Guardar</button>
-                </div>
-                <h2>{{ nombre_docente }}</h2>
-                <form action="{{ url_for('update_docentes') }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <div class="day-checkboxes">
-                        {% for dia in dias %}
-                        <div class="day">
-                            <strong>{{ dia }}</strong>
-                            <div class="checkbox-group">
-                                {% for hora in bloques %}
-                                    <label>
-                                        <input type="checkbox"
-                                            id="{{ nombre_docente }}_{{ dia }}_{{ hora }}"
-                                            name="{{ nombre_docente }}_{{ dia }}_{{ hora }}"
-                                            value="{{ hora }}"
-                                            {% if disponibilidad[nombre_docente][dia][hora] == 'Si' %}checked{% endif %}
-                                            disabled>
-                                        {{ hora }}
-                                    </label>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% endfor %}
+                <div class="docente">
+                    <div class="docente-buttons">
+                        <button type="button" class="edit-btn" onclick="toggleEdit('{{ nombre_docente }}')">Editar</button>
+                        <button type="button" class="save-btn" id="save-{{ nombre_docente }}" disabled onclick="saveChanges('{{ nombre_docente }}')">Guardar</button>
                     </div>
-                    <input type="hidden" name="docente" value="{{ nombre_docente }}">
-                </form>
-            </div>
+                    <h2>{{ nombre_docente }}</h2>
+                    <form action="{{ url_for('mostrar_docentes') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="day-checkboxes">
+                            {% for dia in dias %}
+                                <div class="day">
+                                    <strong>{{ dia }}</strong>
+                                    <div class="checkbox-group">
+                                        {% for hora in bloques %}
+                                            <label>
+                                                <input type="checkbox"
+                                                    id="{{ nombre_docente }}_{{ dia }}_{{ hora }}"
+                                                    name="{{ nombre_docente }}_{{ dia }}_{{ hora }}"
+                                                    value="{{ hora }}"
+                                                    {% if disponibilidad[nombre_docente][dia][hora] == 'Si' %}checked{% endif %}
+                                                    {% if not is_editable %}disabled{% endif %}>
+                                                {{ hora }}
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="docente" value="{{ nombre_docente }}">
+                    </form>
+                </div>
             {% endfor %}
             <div class="pagination">
                 <button onclick="window.location.href='{{ url_for('mostrar_docentes', page=page-1) }}'" {% if not has_prev %}disabled{% endif %}> 🡠 Anterior</button>
