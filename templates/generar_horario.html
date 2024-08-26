@@ -39,7 +39,7 @@
         <h2>Menú</h2>
         <ul>
             <li><a href="{{ url_for('asignaturas') }}"><img src="{{ url_for('static', filename='asignatura.png') }}" alt="Asignaturas Icon" class="icon"> Asignaturas</a></li>
-            <li><a href="{{ url_for('docentes') }}"><img src="{{ url_for('static', filename='docentes.png') }}" alt="Docentes Icon" class="icon"> Docentes</a></li>
+            <li><a href="{{ url_for('mostrar_docentes') }}"><img src="{{ url_for('static', filename='docentes.png') }}" alt="Docentes Icon" class="icon"> Docentes</a></li>
             <li><a href="{{ url_for('generar_horario') }}"><img src="{{ url_for('static', filename='generar-horario.png') }}" alt="Generar Horario Icon" class="icon"> Generar Horario</a></li>
         </ul>
         <a href="{{ url_for('logout') }}" class="logout-btn">Cerrar Sesión</a>

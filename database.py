@@ -68,5 +68,11 @@ def update_disponibilidad_csv(original_dict, updated_dict, file_path='data/dispo
         for row in rows_to_update:
             writer.writerow(row)
 
-
-
+def jsonify_disponibilidad(docente_disponibilidad):
+    result = {}
+    for docente, disponibilidad in docente_disponibilidad.items():
+        disponibilidad_simple = {}
+        for dia, horarios in disponibilidad.items():
+            disponibilidad_simple[dia] = [horario for horario, estado in horarios.items()]
+        result[docente] = disponibilidad_simple
+    return result

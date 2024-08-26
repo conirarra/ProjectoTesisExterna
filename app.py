@@ -1,7 +1,8 @@
 from flask import Flask, render_template, redirect, url_for, request, session, flash, jsonify
 from werkzeug.security import check_password_hash
-from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv
-from flask_wtf.csrf import CSRFProtect, generate_csrf
+from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv, jsonify_disponibilidad
+from flask_wtf.csrf import CSRFProtect
+import csv
 
 ramos = [
     'Introducción a las Matemáticas',
@@ -35,7 +36,8 @@ def login():
 
 @app.route('/asignaturas')
 def asignaturas():
-    return render_template('asignaturas.html', asignaturas=ramos)
+    asignaturas = {ramo: [] for ramo in ramos}
+    return render_template('asignaturas.html', asignaturas=asignaturas)
 
 @app.route('/docentes', methods=['GET', 'POST'])
 def mostrar_docentes():
@@ -71,6 +73,38 @@ def mostrar_docentes():
                            bloques=['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'],
                            page=page, total_docentes=total_docentes, per_page=per_page,
                            has_prev=has_prev, has_next=has_next, docentes_dict=docentes_dict)
+
+def manage_docentes():
+    if request.method == 'GET':
+        # Obtener la lista de docentes
+        docentes = list(docente_disponibilidad.keys())
+        return jsonify(docentes)
+    elif request.method == 'POST':
+        # Manejar la creación o modificación de secciones (esto es solo un ejemplo, ajusta según tus necesidades)
+        data = request.form
+        asignatura = data.get('asignatura')
+        docente = data.get('docente')
+        horario = data.get('horario')
+        # Aquí puedes agregar la lógica para manejar la creación de secciones
+        return 'Sección creada', 200
+    
+@app.route('/disponibilidad/<docente>', methods=['GET'])
+def get_disponibilidad(docente):
+    # Retorna la disponibilidad de un docente específico
+    disponibilidad_simple = jsonify_disponibilidad(docente_disponibilidad)
+    horarios = disponibilidad_simple.get(docente, {})
+    return jsonify(horarios)
+
+@app.route('/get_docentes', methods=['GET'])
+def get_docentes():
+    ramo = request.args.get('ramo')  # Obtener el ramo de los parámetros de consulta
+    if not ramo:
+        return jsonify({'docentes': []})
+
+    # Filtrar docentes que imparten el ramo
+    docentes_que_imparten_ramo = [docente for docente, ramos in docentes_dict.items() if ramo in ramos]
+    
+    return jsonify({'docentes': docentes_que_imparten_ramo})
 
 @app.route('/generar-horario')
 def generar_horario(): 
