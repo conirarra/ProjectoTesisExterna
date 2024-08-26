@@ -88,11 +88,13 @@ def manage_docentes():
         # Aquí puedes agregar la lógica para manejar la creación de secciones
         return 'Sección creada', 200
     
-@app.route('/disponibilidad/<docente>', methods=['GET'])
+@app.route('/get_disponibilidad/<docente>', methods=['GET'])
 def get_disponibilidad(docente):
-    # Retorna la disponibilidad de un docente específico
-    disponibilidad_simple = jsonify_disponibilidad(docente_disponibilidad)
-    horarios = disponibilidad_simple.get(docente, {})
+    print(f'Recibiendo solicitud para docente: {docente}')
+    if docente not in docente_disponibilidad:
+        print('Docente no encontrado')
+        return jsonify({'error': 'Docente no encontrado'}), 404
+    horarios = docente_disponibilidad[docente]
     return jsonify(horarios)
 
 @app.route('/get_docentes', methods=['GET'])
