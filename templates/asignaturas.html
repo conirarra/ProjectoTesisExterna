@@ -148,6 +148,26 @@
         .section-list ul{
             margin-top: 0;
         }
+        .btn-remove-section {
+            background-color: transparent; /* Fondo transparente */
+            color: #dc3545; /* Rojo para la cruz */
+            border: none;
+            font-size: 20px; /* Tamaño de la cruz */
+            cursor: pointer;
+            display: inline-flex; /* Para centrar el contenido */
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-left: 3px; /* Espaciado a la izquierda */
+        }
+
+        .btn-remove-section:hover {
+            color: #c82333; /* Rojo más oscuro cuando se pasa el cursor */
+        }
+
+        .btn-remove-section:focus {
+            outline: none; /* Elimina el contorno al hacer clic */
+        }
         footer {
             position: absolute;
             bottom: 0;
@@ -190,6 +210,7 @@
                             <li class="section-item">
                                 <strong>Docente:</strong> {{ seccion['docente'] }}<br>
                                 <strong>Dia:</strong> {{seccion['dia'] }} [{{ seccion['bloque'] }}]
+                                <button type="button" class="btn-remove-section" onclick="removeSection('{{ ramo }}', '{{ seccion['docente'] }}', '{{ seccion['dia'] }}', '{{ seccion['bloque'] }}')">x</button>
                             </li>
                             {% endfor %}
                         </ul>
@@ -236,6 +257,37 @@
     </div>
 
 <script>
+    function removeSection(ramo, docente, dia, bloque) {
+        if (confirm('¿Estás seguro de que deseas eliminar esta sección?')) {
+            fetch('/eliminar_seccion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    ramo: ramo,
+                    docente: docente,
+                    dia: dia,
+                    bloque: bloque
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Sección eliminada con éxito.');
+                    location.reload(); // Recargar la página para actualizar la lista
+                } else {
+                    alert('Error al eliminar la sección.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar la sección.');
+            });
+        }
+    }
+
     function openSelectDocenteModal(ramo) {
         // Mostrar el modal
         document.getElementById('selectDocenteModal').style.display = 'block';

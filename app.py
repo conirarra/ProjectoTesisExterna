@@ -207,5 +207,31 @@ def obtener_horario():
 
     return jsonify({'secciones': secciones_filtradas})
 
+@app.route('/eliminar_seccion', methods=['POST'])
+def eliminar_seccion():
+    data = request.get_json()
+    ramo = data.get('ramo')
+    docente = data.get('docente')
+    dia = data.get('dia')
+    bloque = data.get('bloque')
+
+    # Leer el archivo CSV
+    try:
+        with open("data/secciones.csv", mode='r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile)
+            rows = [row for row in reader if not (row['docente'] == docente and row['dia'] == dia and row['bloque'] == bloque and row['ramo'] == ramo)]
+
+        # Escribir el archivo CSV actualizado
+        with open("data/secciones.csv", mode='w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['id', 'docente', 'ramo', 'dia', 'bloque']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return jsonify(success=True)
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify(success=False)
+
 if __name__ == '__main__':
     app.run(debug=True)
