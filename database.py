@@ -80,5 +80,3 @@ def leer_secciones_csv():
         for fila in lector_csv:
             secciones.append(fila)
     return secciones
-
-print(docente_disponibilidad)

@@ -100,10 +100,6 @@ def get_docentes():
     
     return jsonify({'docentes': docentes_que_imparten_ramo})
 
-@app.route('/generar-horario')
-def generar_horario(): 
-    return render_template('generar_horario.html')
-
 @app.route('/logout')
 def logout():
     session.pop('username', None)
@@ -185,6 +181,30 @@ def guardar_datos():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/generar_horario')
+def generar_horario():
+    docentes = [{'id': i+1, 'nombre': d[0], 'ramos': d[1:]} for i, d in enumerate(lista_docentes)]
+    return render_template('generar_horario.html', docentes=docentes)
+
+@app.route('/get_ramos/<int:docente_id>')
+def get_ramos(docente_id):
+    docente = next((d for d in lista_docentes if lista_docentes.index(d) + 1 == docente_id), None)
+    if docente:
+        return jsonify({"ramos": docente[1:]})
+    return jsonify({"ramos": []})
+
+@app.route('/obtener_horario', methods=['POST'])
+def obtener_horario():
+    data = request.json  # Lee los datos enviados desde el frontend
+    docente = data.get('docente')
+    ramo = data.get('ramo')
+    secciones = leer_secciones_csv()
+
+    # Filtrar las secciones que coincidan con el docente y el ramo seleccionados
+    secciones_filtradas = [seccion for seccion in secciones if seccion['docente'] == docente and seccion['ramo'] == ramo]
+
+    return jsonify({'secciones': secciones_filtradas})
 
 if __name__ == '__main__':
     app.run(debug=True)

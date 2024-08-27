@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
     <title>Generar Horario</title>
@@ -15,6 +16,124 @@
             box-sizing: border-box;
             flex: 1;
             overflow-y: auto;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+            width: 200px;
+            margin-right: 50px;
+        }
+
+        .dropdown-content {
+            display: none; /* Ocultar el menú por defecto */
+            position: absolute;
+            background-color: white;
+            min-width: 100%;
+            border: 2px solid black;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            top: 100%;
+            left: 0;
+            padding-top: 5px;
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 10px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+        .selected {
+            background-color: #f9f9f9;
+            border: 2px solid black;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+            min-width: 200px; /* Ancho mínimo inicial */
+            width: auto; /* Permite que el ancho se ajuste al contenido */
+            color: black;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap; /* Evita el ajuste de línea para el texto */
+        }
+        .selected-ramo {
+            width: fit-content;
+            padding-right: 40px;
+        }
+        .dropdown-header {
+            font-size: 16px;
+            padding: 10px;
+            color: #4CAF50;
+            background-color: white;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            text-align: center;
+        }
+        .arrow {
+            position: absolute;
+            right: 15px; /* Ajusta según sea necesario */
+            top: 50%;
+            transform: translateY(-50%);
+            border: solid black;
+            border-width: 0 4px 4px 4px;
+            border-color: transparent transparent black transparent;
+            width: 0;
+            height: 0;
+            pointer-events: none; /* Para que no interfiera con el clic */
+        }
+        .generate-button {
+            padding: 10px 20px;
+            background-color: #12397a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 50px;
+        }
+        .generate-button:hover {
+            background-color: #0056b3;
+        }
+        .calendar-container {
+            margin-top: 20px;
+        }
+
+        .calendar {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .calendar th, .calendar td {
+            border: 1px solid black;
+            text-align: center;
+            vertical-align: top;
+            height: 30px;
+        }
+
+        .calendar th {
+            background-color: #f0f0f0;
+        }
+        .cell {
+            height: 100px; /* Ajusta la altura según sea necesario */
+            position: relative;
+        }
+
+        .cell .section {
+            display: block;
+            margin: 2px;
+            padding: 2px;
+            background-color: #cce5ff;
+            border: 1px solid #007bff;
+            border-radius: 3px;
         }
         footer {
             position: absolute;
@@ -46,11 +165,217 @@
     </div>
     <div class="content">
         <h2 style="text-align: center; font-size: 30px;">Optimizador de Horarios Docentes</h2>
-        <p>Aquí va el contenido principal de la página.</p>
+        
+        <div class="dropdown-container">
+            <div class="dropdown">
+                <div class="dropdown-header"></div>
+                <div class="selected selected-docente" onclick="toggleDropdown('docenteDropdown')">
+                    <span id="selectedDocente">Selecciona un docente</span>
+                    <div class="arrow"></div>
+                </div>
+                <div id="docenteDropdown" class="dropdown-content">
+                    {% for docente in docentes %}
+                        <a href="#" onclick="selectDocente('{{ docente.id }}', '{{ docente.nombre }}')">{{ docente.nombre }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="dropdown">
+                <div class="dropdown-header"></div>
+                <div id="selectedRamoContainer" class="selected selected-ramo" onclick="toggleDropdown('ramoDropdown')">
+                    <span id="selectedRamo">Seleccione Asignatura</span>
+                    <div class="arrow"></div>
+                </div>
+                <div id="ramoDropdown" class="dropdown-content">
+                    <!-- Las asignaturas se llenarán aquí -->
+                </div>
+            </div>
+
+            <button id="generate-button" class="generate-button" onclick="generarHorario()">Generar Horario</button>
+        </div>
+
+        <table id="scheduleTable" border="1" style="width: 1100px;margin-top: 30px;text-align: center;border-collapse: collapse;margin-right: 0px;">
+            <thead>
+                <tr style="height: 30px;">
+                    <th style="width: 80px;">Bloques</th>
+                    <th style="width: 150px;">Lunes</th>
+                    <th style="width: 150px;">Martes</th>
+                    <th style="width: 150px;">Miércoles</th>
+                    <th style="width: 150px;">Jueves</th>
+                    <th style="width: 150px;">Viernes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="height: 30px;">
+                    <td>1-2</td>
+                    <td id="lunes1-2"></td>
+                    <td id="martes1-2"></td>
+                    <td id="miercoles1-2"></td>
+                    <td id="jueves1-2"></td>
+                    <td id="viernes1-2"></td>
+                </tr>
+                <tr style="height: 30px;">
+                    <td>3-4</td>
+                    <td id="lunes3-4"></td>
+                    <td id="martes3-4"></td>
+                    <td id="miercoles3-4"></td>
+                    <td id="jueves3-4"></td>
+                    <td id="viernes3-4"></td>
+                </tr>
+                <tr style="height: 30px;">
+                    <td>5-6</td>
+                    <td id="lunes5-6"></td>
+                    <td id="martes5-6"></td>
+                    <td id="miercoles5-6"></td>
+                    <td id="jueves5-6"></td>
+                    <td id="viernes5-6"></td>
+                </tr>
+                <tr style="height: 30px;">
+                    <td>7-8</td>
+                    <td id="lunes7-8"></td>
+                    <td id="martes7-8"></td>
+                    <td id="miercoles7-8"></td>
+                    <td id="jueves7-8"></td>
+                    <td id="viernes7-8"></td>
+                </tr>
+                <tr style="height: 30px;">
+                    <td>9-10</td>
+                    <td id="lunes9-10"></td>
+                    <td id="martes9-10"></td>
+                    <td id="miercoles9-10"></td>
+                    <td id="jueves9-10"></td>
+                    <td id="viernes9-10"></td>
+                </tr>
+                <tr style="height: 30px;">
+                    <td>11-12</td>
+                    <td id="lunes11-12"></td>
+                    <td id="martes11-12"></td>
+                    <td id="miercoles11-12"></td>
+                    <td id="jueves11-12"></td>
+                    <td id="viernes11-12"></td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
     </div>
     <footer>
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
+
+    <script>
+        let asignaturasPorDocente = {};
+
+        function selectDocente(docenteId, docenteNombre) {
+            document.getElementById('selectedDocente').textContent = docenteNombre;
+            document.getElementById('selectedRamo').disabled = false; // Habilitar el botón de asignaturas
+            updateRamoDropdown(docenteId);
+            toggleDropdown('docenteDropdown');
+        }
+
+        function updateRamoDropdown(docenteId) {
+            var ramoDropdown = document.getElementById('ramoDropdown');
+            ramoDropdown.innerHTML = ''; // Limpiar el menú de asignaturas
+
+            fetch(`/get_ramos/${docenteId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.ramos) {
+                        data.ramos.forEach(function(ramo) {
+                            var a = document.createElement('a');
+                            a.href = '#';
+                            a.textContent = ramo;
+                            a.onclick = function() { selectRamo(ramo); };
+                            ramoDropdown.appendChild(a);
+                        });
+                    }
+                });
+        }
+
+        function selectRamo(ramo) {
+            document.getElementById('selectedRamo').textContent = ramo;
+            toggleDropdown('ramoDropdown');
+        }
+
+        function toggleDropdown(id) {
+            var dropdown = document.getElementById(id);
+            dropdown.classList.toggle('show');
+        }
+        function generarHorario() {
+            let docenteSeleccionado = document.getElementById("selectedDocente").textContent;
+            let ramoSeleccionado = document.getElementById("selectedRamo").textContent;
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            if (docenteSeleccionado === "Selecciona un docente" || ramoSeleccionado === "Seleccione Asignatura") {
+                alert("Por favor, seleccione un docente y una asignatura antes de generar el horario.");
+                return;
+            }
+
+            fetch('/obtener_horario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ docente: docenteSeleccionado, ramo: ramoSeleccionado })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const dias = {
+                    "Lunes": "lunes",
+                    "Martes": "martes",
+                    "Miercoles": "miercoles",
+                    "Jueves": "jueves",
+                    "Viernes": "viernes"
+                };
+                const horas = ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'];
+
+                // Primero, limpiar el contenido anterior de todas las celdas
+                for (let dia in dias) {
+                    horas.forEach(hora => {
+                        document.getElementById(`${dias[dia]}${hora}`).innerHTML = '';
+                    });
+                }
+
+                // Asegúrate de que el dato 'secciones' esté disponible y sea una lista
+                if (Array.isArray(data.secciones)) {
+                    data.secciones.forEach(section => {
+                        const { id, docente, ramo, dia, bloque } = section;
+
+                        // Verifica si el docente y el ramo coinciden con la selección actual
+                        if (docente === docenteSeleccionado && ramo === ramoSeleccionado) {
+                            const cellId = `${dias[dia]}${bloque}`;
+                            const cell = document.getElementById(cellId);
+
+                            if (cell) {
+                                const sectionDiv = document.createElement('div');
+                                sectionDiv.className = 'section';
+                                sectionDiv.textContent = `Sección ${id}`;
+                                cell.appendChild(sectionDiv);
+                            }
+                        }
+                    });
+                } else {
+                    console.error("El dato 'secciones' no está disponible o no es una lista:", data);
+                }
+            })
+            .catch(error => {
+                console.error("Error al obtener el horario:", error);
+            });
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.selected')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
+
 </body>
 </html>
