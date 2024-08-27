@@ -3,6 +3,7 @@ from werkzeug.security import check_password_hash
 from database import docente_disponibilidad, lista_disponible, lista_usuarios, lista_docentes, docentes_dict, docente_disp_original, update_disponibilidad_csv, jsonify_disponibilidad, leer_secciones_csv
 from flask_wtf.csrf import CSRFProtect
 import csv
+import os
 from collections import defaultdict
 
 ramos = [
@@ -138,45 +139,91 @@ def update_docentes():
 @app.route('/guardar_datos', methods=['POST'])
 def guardar_datos():
     try:
+        # Obtener los datos JSON del request
         data = request.json
 
-        docente = data.get('docente')
-        ramo = data.get('ramo')
-        bloques = data.get('bloques')
+        # Verificar que los datos sean una lista
+        if not isinstance(data, list):
+            return jsonify({'error': 'Datos no están en el formato esperado'}), 400
+        
+        next_id = get_next_id("data/secciones.csv")
 
-        if not docente or not ramo or not bloques:
-            return jsonify({'error': 'Faltan datos necesarios'}), 400
+        for item in data:
+            item['id'] = next_id
+            next_id += 1
+        
+        docentes = set()
+        ramos = set()
+        bloques = []
+
+        # Procesar los datos recibidos
+        for item in data:
+            docente = item.get('docente')
+            ramo = item.get('ramo')
+            dia = item.get('dia')
+            bloque = item.get('bloque')
+            id = item.get('id')
+
+            if not docente or not ramo or not dia or not bloque:
+                return jsonify({'error': 'Faltan datos necesarios'}), 400
+
+            docentes.add(docente)
+            ramos.add(ramo)
+
+            # Añadir el bloque a la lista de bloques
+            bloques.append({'id': id, 'dia': dia, 'bloque': bloque, 'docente': docente, 'ramo': ramo})
 
         # Guardar datos en secciones.csv
         with open('data/secciones.csv', mode='a', newline='') as file:
-            writer = csv.writer(file)
-            bloques_list = bloques.split(',')  # Convierte la cadena de bloques en una lista
-            for bloque in bloques_list:
-                writer.writerow([docente, ramo, bloque])
+            writer = csv.DictWriter(file, fieldnames=['id', 'docente', 'ramo', 'dia', 'bloque'])
+            # Si el archivo está vacío, escribe el encabezado
+            if file.tell() == 0:
+                writer.writeheader()
+            # Escribir las filas
+            for item in bloques:
+                writer.writerow(item)
 
-        # Leer el archivo disponibilidad.csv
+        # Leer el archivo disponibilidad.csv y actualizar disponibilidad
         disponibilidad_dict = defaultdict(lambda: defaultdict(lambda: defaultdict(str)))
-        with open('data/disponibilidad.csv', mode='r', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            encabezado = next(reader)
-            for row in reader:
-                docente_nombre = row[0]
-                for i, dia in enumerate(['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes']):
-                    for j, bloque in enumerate(['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']):
-                        disponibilidad_dict[docente_nombre][dia][bloque] = row[1 + i * 6 + j]
+        try:
+            with open('data/disponibilidad.csv', mode='r', encoding='utf-8') as file:
+                reader = csv.reader(file)
+                encabezado = next(reader)
+                for row in reader:
+                    docente_nombre = row[0]
+                    for i, dia in enumerate(['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes']):
+                        for j, bloque in enumerate(['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']):
+                            disponibilidad_dict[docente_nombre][dia][bloque] = row[1 + i * 6 + j]
+        except FileNotFoundError:
+            print("Archivo disponibilidad.csv no encontrado, creando nuevo.")
 
-        # Actualizar disponibilidad
-        for bloque in bloques.split(','):
-            try:
-                dia, bloque_hora = bloque.split(' ')
-                if docente in disponibilidad_dict:
-                    if dia in disponibilidad_dict[docente]:
-                        disponibilidad_dict[docente][dia][bloque_hora] = 'No'
-            except ValueError as ve:
-                print(f"Error al procesar el bloque '{bloque}': {ve}")
+        # Actualizar disponibilidad en el diccionario
+        for item in bloques:
+            dia = item.get('dia')
+            bloque_hora = item.get('bloque')
+            docente = item.get('docente')
+            if docente in disponibilidad_dict:
+                if dia in disponibilidad_dict[docente]:
+                    disponibilidad_dict[docente][dia][bloque_hora] = 'No'
 
         # Guardar cambios en disponibilidad.csv
-        update_disponibilidad_csv({}, disponibilidad_dict, file_path='data/disponibilidad.csv')
+        with open('data/disponibilidad.csv', mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            # Escribir el encabezado
+            writer.writerow(['Nombre',
+                             'Lunes,1-2', 'Lunes,3-4', 'Lunes,5-6', 'Lunes,7-8', 'Lunes,9-10', 'Lunes,11-12',
+                             'Martes,1-2', 'Martes,3-4', 'Martes,5-6', 'Martes,7-8', 'Martes,9-10', 'Martes,11-12',
+                             'Miercoles,1-2', 'Miercoles,3-4', 'Miercoles,5-6', 'Miercoles,7-8', 'Miercoles,9-10', 'Miercoles,11-12',
+                             'Jueves,1-2', 'Jueves,3-4', 'Jueves,5-6', 'Jueves,7-8', 'Jueves,9-10', 'Jueves,11-12',
+                             'Viernes,1-2', 'Viernes,3-4', 'Viernes,5-6', 'Viernes,7-8', 'Viernes,9-10', 'Viernes,11-12'])
+
+            # Escribir las filas
+            for docente, dias in disponibilidad_dict.items():
+                row = [docente]
+                for dia in ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes']:
+                    for bloque in ['1-2', '3-4', '5-6', '7-8', '9-10', '11-12']:
+                        row.append(disponibilidad_dict[docente][dia][bloque])
+                writer.writerow(row)
 
         return jsonify({'message': 'Datos guardados correctamente'}), 200
 
@@ -232,6 +279,15 @@ def eliminar_seccion():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify(success=False)
+    
+def get_next_id(filename):
+    """Obtiene el siguiente id disponible basado en el número de filas en el archivo CSV."""
+    if not os.path.isfile(filename):
+        return 1  # Si el archivo no existe, empezamos con el id 1
+    with open(filename, mode='r') as file:
+        reader = csv.DictReader(file)
+        ids = [int(row['id']) for row in reader if row['id'].isdigit()]
+        return max(ids, default=0) + 1
 
 if __name__ == '__main__':
     app.run(debug=True)

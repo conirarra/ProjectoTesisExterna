@@ -115,7 +115,7 @@
             cursor: pointer;
         }
         .modal-footer {
-            margin-top: 20px;
+            margin-top: 10px;
             text-align: right;
         }
         .availability-container {
@@ -144,6 +144,7 @@
         }
         .section-list {
             margin-top: 15px;
+            overflow-y: auto;
         }
         .section-list ul{
             margin-top: 0;
@@ -242,14 +243,61 @@
         </div>
     </div>
 
+
     <!-- Modal para mostrar disponibilidad del docente -->
     <div id="availabilityModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAvailabilityModal()">&times;</span>
             <h2>Disponibilidad de <span id="docenteSeleccionado"></span></h2>
+            
+            <!-- Contenedor de disponibilidad -->
             <div id="availabilityContainer" class="availability-container">
+                <div class="day" data-day="Lunes">
+                    <label><input type="radio" name="bloque" value="1-2"> 1-2</label>
+                    <label><input type="radio" name="bloque" value="3-4"> 3-4</label>
+                    <label><input type="radio" name="bloque" value="5-6"> 5-6</label>
+                    <label><input type="radio" name="bloque" value="7-8"> 7-8</label>
+                    <label><input type="radio" name="bloque" value="9-10"> 9-10</label>
+                    <label><input type="radio" name="bloque" value="11-12"> 11-12</label>
+                </div>
+                <div class="day" data-day="Martes">
+                    <label><input type="radio" name="bloque" value="1-2"> 1-2</label>
+                    <label><input type="radio" name="bloque" value="3-4"> 3-4</label>
+                    <label><input type="radio" name="bloque" value="5-6"> 5-6</label>
+                    <label><input type="radio" name="bloque" value="7-8"> 7-8</label>
+                    <label><input type="radio" name="bloque" value="9-10"> 9-10</label>
+                    <label><input type="radio" name="bloque" value="11-12"> 11-12</label>
+                </div>
+                <div class="day" data-day="Miercoles">
+                    <label><input type="radio" name="bloque" value="1-2"> 1-2</label>
+                    <label><input type="radio" name="bloque" value="3-4"> 3-4</label>
+                    <label><input type="radio" name="bloque" value="5-6"> 5-6</label>
+                    <label><input type="radio" name="bloque" value="7-8"> 7-8</label>
+                    <label><input type="radio" name="bloque" value="9-10"> 9-10</label>
+                    <label><input type="radio" name="bloque" value="11-12"> 11-12</label>
+                </div>
+                <div class="day" data-day="Jueves">
+                    <label><input type="radio" name="bloque" value="1-2"> 1-2</label>
+                    <label><input type="radio" name="bloque" value="3-4"> 3-4</label>
+                    <label><input type="radio" name="bloque" value="5-6"> 5-6</label>
+                    <label><input type="radio" name="bloque" value="7-8"> 7-8</label>
+                    <label><input type="radio" name="bloque" value="9-10"> 9-10</label>
+                    <label><input type="radio" name="bloque" value="11-12"> 11-12</label>
+                </div>
+                <div class="day" data-day="Viernes">
+                    <label><input type="radio" name="bloque" value="1-2"> 1-2</label>
+                    <label><input type="radio" name="bloque" value="3-4"> 3-4</label>
+                    <label><input type="radio" name="bloque" value="5-6"> 5-6</label>
+                    <label><input type="radio" name="bloque" value="7-8"> 7-8</label>
+                    <label><input type="radio" name="bloque" value="9-10"> 9-10</label>
+                    <label><input type="radio" name="bloque" value="11-12"> 11-12</label>
+                </div>
                 <!-- Aquí se cargarán los checkboxes -->
+                <div id="checkboxesContainer" class="checkboxes-container">
+                    <!-- Checkboxes se insertarán aquí mediante JavaScript -->
+                </div>
             </div>
+            
             <div class="modal-footer">
                 <button class="saveButton" onclick="guardarDatos()">Guardar Cambios</button>
             </div>
@@ -257,6 +305,7 @@
     </div>
 
 <script>
+    let nextSectionId = 1;
     function removeSection(ramo, docente, dia, bloque) {
         if (confirm('¿Estás seguro de que deseas eliminar esta sección?')) {
             fetch('/eliminar_seccion', {
@@ -341,6 +390,9 @@
                 // Definir los días de la semana
                 const daysOfWeek = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'];
                 
+                // Crear una variable para almacenar los checkboxes
+                let singleCheckboxGroup = 'bloque'; // Nombre del grupo de checkboxes
+                
                 // Crear columnas para los días
                 daysOfWeek.forEach(day => {
                     const dayDiv = document.createElement('div');
@@ -356,8 +408,10 @@
                         if (available === 'Si') {
                             const label = document.createElement('label');
                             const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
+                            checkbox.type = 'radio'; // Cambiar a 'radio' para permitir solo una selección
                             checkbox.value = block;
+                            checkbox.name = singleCheckboxGroup; // Nombre compartido para todos los checkboxes
+                            checkbox.dataset.day = day;
                             label.appendChild(checkbox);
                             label.appendChild(document.createTextNode(block));
                             blocksDiv.appendChild(label);
@@ -375,60 +429,72 @@
 
     function closeAvailabilityModal() {
         document.getElementById('availabilityModal').style.display = 'none';
+        window.location.reload();
     }
 
     function guardarDatos() {
         const docente = document.getElementById('docenteSeleccionado').textContent;
         const ramo = document.getElementById('ramoSeleccionado').textContent;
-        
-        // Obtener bloques seleccionados
-        const selectedBlocks = [];
-        const checkboxes = document.querySelectorAll('#availabilityContainer input[type="checkbox"]:checked');
-        checkboxes.forEach(checkbox => {
-            selectedBlocks.push(checkbox.value);
-        });
 
-        // Crear datos para enviar
-        const data = {
-            docente: docente,
-            ramo: ramo,
-            bloques: selectedBlocks.join(',')  // Convierte la lista de bloques en una cadena separada por comas
-        };
+        // Verifica si hay un bloque seleccionado
+        const selectedBlock = document.querySelector('input[name="bloque"]:checked');
 
-        let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        if (!selectedBlock) {
+            alert('Debes seleccionar un bloque.');
+            return;
+        }
 
-        fetch('/guardar_datos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            // Verifica si la respuesta es correcta
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.message) {
-                alert(data.message);
-                closeAvailabilityModal();
-            } else {
-                console.error('Error:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        // Mensaje de retroalimentación
+        alert('Día Seleccionado. Procediendo con la verificación.');
+
+        // Introduce una breve pausa para asegurar que el bloque seleccionado esté disponible
+        setTimeout(() => {
+            // Verifica el bloque seleccionado
+            console.log('Selected Block:', selectedBlock);
+
+            const dia = selectedBlock.getAttribute('data-day');
+
+            const data = {
+                docente: docente,
+                ramo: ramo,
+                dia: dia,
+                bloque: selectedBlock.value
+            };
+
+            let csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            fetch('/guardar_datos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify([data])  // Enviamos los datos como una lista con un solo objeto
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    closeAvailabilityModal();
+                    closeSelectDocenteModal();
+                    $('#availabilityModal').modal('hide');
+                    $('#selectionModal').modal('hide');
+                } else {
+                    console.error('Error:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }, 500); // Retraso de 500 ms para asegurar que el bloque seleccionado esté disponible
     }
 
-    // Asegúrate de añadir el event listener al botón "Guardar"
-    document.querySelector('.saveButton').addEventListener('click', guardarDatos);
-    $('#availabilityModal').modal('hide');
-    $('#selectionModal').modal('hide');
+
 </script>
 </body>
 </html>

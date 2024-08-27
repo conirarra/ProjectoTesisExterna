@@ -256,6 +256,7 @@
                 </tr>
             </tbody>
         </table>
+        <button onclick="exportToExcel()" class="generate-button" style="margin-top: 50px; margin-left: 450px;">Exportar a Excel</button>
         </div>
     </div>
     <footer>
@@ -263,8 +264,15 @@
              alt="Pie de página UNAB">
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
     <script>
         let asignaturasPorDocente = {};
+
+        function exportToExcel() {
+            var wb = XLSX.utils.table_to_book(document.getElementById('scheduleTable'), { sheet: "Horario" });
+            XLSX.writeFile(wb, 'horario.xlsx');
+        }
 
         function selectDocente(docenteId, docenteNombre) {
             document.getElementById('selectedDocente').textContent = docenteNombre;
@@ -376,6 +384,5 @@
             }
         }
     </script>
-
 </body>
 </html>
