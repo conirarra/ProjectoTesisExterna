@@ -52,7 +52,6 @@
             gap: 10px;
             margin-bottom: 15px;
         }
-    
         .docente-buttons button {
             padding: 5px 10px;
             border: none;
@@ -220,25 +219,72 @@
         <img src="{{ url_for('static', filename='pie_de_firma-UNAB.jpg') }}" 
              alt="Pie de página UNAB">
     </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        var secciones = {{ secciones | tojson | safe }};
+        function bloquearCheckboxes() {
+            // Iterar sobre cada sección en el diccionario.
+            secciones.forEach(function(seccion) {
+                var docente = seccion.docente;
+                var dia = seccion.dia;
+                var bloque = seccion.bloque;
+
+                // Construir el ID del checkbox en base al docente, día y bloque.
+                var checkboxId = docente.replace(/ /g, '') + "_" + dia + "_" + bloque;
+
+                // Encontrar el checkbox correspondiente en la página.
+                var checkbox = document.getElementById(checkboxId);
+
+                // Si el checkbox existe, deshabilitarlo.
+                if (checkbox) {
+                    checkbox.disabled = true;
+                }
+            });
+        }
+
+        // Llamar a la función cuando se cargue la página o en el momento adecuado.
+        document.addEventListener("DOMContentLoaded", function() {
+            bloquearCheckboxes();
+        });
+
+        $(document).ready(function() {
+            // Llamar a bloquearCheckboxes() en jQuery también para asegurar la compatibilidad
+            bloquearCheckboxes();
+        });
+
         function toggleEdit(docente) {
+            secciones=secciones
             console.log('Toggle edit for:', docente);
-            
-            // Obtén todos los checkboxes y botones correspondientes al docente
+
+            // Obtén todos los checkboxes y el botón Guardar correspondientes al docente
             const checkboxes = document.querySelectorAll(`input[id^="${docente}_"]`);
             const saveButton = document.getElementById(`save-${docente}`);
-            
+
             if (!saveButton) {
                 console.error('Save button not found for:', docente);
                 return;
             }
 
-            // Alternar el estado de los checkboxes y el botón de guardar
+            // Alternar el estado del botón de guardar
+            saveButton.disabled = !saveButton.disabled;
+
+            // Alternar el estado de los checkboxes
             checkboxes.forEach(checkbox => {
-                checkbox.disabled = !checkbox.disabled; // Activa o desactiva los checkboxes
+                // Comprobar si el checkbox debe permanecer deshabilitado
+                let idParts = checkbox.id.split('_');
+                let dia = idParts[1];
+                let bloque = idParts[2];
+
+                let debePermanecerDeshabilitado = secciones.some(seccion => 
+                    seccion.docente === docente && seccion.dia === dia && seccion.bloque === bloque
+                );
+
+                if (debePermanecerDeshabilitado) {
+                    checkbox.disabled = true; // Mantener el checkbox deshabilitado
+                } else {
+                    checkbox.disabled = !checkbox.disabled; // Alternar el estado de los checkboxes
+                }
             });
-            
-            saveButton.disabled = !saveButton.disabled; // Activa o desactiva el botón de guardar
         }
 
         function saveChanges(docente) {

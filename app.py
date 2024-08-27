@@ -54,6 +54,7 @@ def mostrar_docentes():
     start = (page - 1) * per_page
     end = start + per_page
     lista_docentes = docentes[start:end]
+    secciones = leer_secciones_csv()
 
     has_prev = page > 1
     has_next = end < total_docentes
@@ -78,7 +79,7 @@ def mostrar_docentes():
                            disponibilidad=docente_disponibilidad, dias=['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'],
                            bloques=['1-2', '3-4', '5-6', '7-8', '9-10', '11-12'],
                            page=page, total_docentes=total_docentes, per_page=per_page,
-                           has_prev=has_prev, has_next=has_next, docentes_dict=docentes_dict)
+                           has_prev=has_prev, has_next=has_next, docentes_dict=docentes_dict, secciones=secciones)
     
 @app.route('/get_disponibilidad/<docente>', methods=['GET'])
 def get_disponibilidad(docente):
