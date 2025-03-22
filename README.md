@@ -1,0 +1,1 @@
+Proyecto creado para estudiante de la Universidad Andrés Bello, que solicitó una página web que permitiese facilitar el proceso de creación los horarios docentes en base a la disponibilidad de los mismos.
